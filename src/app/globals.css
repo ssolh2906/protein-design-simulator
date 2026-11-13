@@ -1,26 +1,185 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Design tokens.
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  The chart colours below are not chosen by eye. They come from a validated
+  palette and were checked with a colour-blindness / contrast validator:
+
+    - categorical slots 1-3 pass all-pairs CVD and normal-vision separation
+      in both light and dark mode;
+    - the depth ramp is a single-hue ordinal ramp, five steps, each adjacent
+      pair separated by at least 0.06 in OKLab lightness;
+    - the fitness scale is diverging (red below wild type, blue above) with a
+      neutral grey midpoint, equal steps per arm.
+
+  Dark mode is a selected set of steps for the dark surface, not an
+  automatic inversion.
+*/
+
+:root {
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+
+  --ink: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --border-strong: rgba(11, 11, 11, 0.18);
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+
+  /* ordinal: sequencing depth, low -> high */
+  --depth-1: #86b6ef;
+  --depth-2: #3987e5;
+  --depth-3: #256abf;
+  --depth-4: #184f95;
+  --depth-5: #0d366b;
+
+  /* diverging: fitness relative to wild type */
+  --div-neg-4: #8f1f1f;
+  --div-neg-3: #c93332;
+  --div-neg-2: #e16261;
+  --div-neg-1: #f0a3a2;
+  --div-mid: #f0efec;
+  --div-pos-1: #9ec5f4;
+  --div-pos-2: #5598e7;
+  --div-pos-3: #2a78d6;
+  --div-pos-4: #184f95;
+
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --success-text: #006300;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:where(:not([data-theme="light"])) {
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #222221;
+
+    --ink: #f0efec;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.18);
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+
+    --depth-1: #184f95;
+    --depth-2: #256abf;
+    --depth-3: #3987e5;
+    --depth-4: #6da7ec;
+    --depth-5: #9ec5f4;
+
+    --div-mid: #383835;
+
+    --success-text: #0ca30c;
   }
 }
 
+:root[data-theme="dark"] {
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-raised: #222221;
+
+  --ink: #f0efec;
+  --ink-secondary: #c3c2b7;
+  --ink-muted: #898781;
+
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+
+  --depth-1: #184f95;
+  --depth-2: #256abf;
+  --depth-3: #3987e5;
+  --depth-4: #6da7ec;
+  --depth-5: #9ec5f4;
+
+  --div-mid: #383835;
+
+  --success-text: #0ca30c;
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-grid: var(--grid);
+  --color-axis: var(--axis);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-serious: var(--serious);
+  --color-critical: var(--critical);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers that must line up vertically in a column. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Prose defaults for chapter body text, kept narrow for readability. */
+.prose-body p {
+  color: var(--ink-secondary);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.prose-body strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

@@ -283,6 +283,7 @@ def compute_fitness(rows, wt, min_input):
             "kept": len(stage),
             "removed": before - len(stage),
             "why": "A truncated protein cannot be a design candidate.",
+            "forced": True,
         }
     )
 
@@ -367,12 +368,13 @@ def reproducibility(variants):
     This is the chapter that matters most. The overall correlation looks
     reassuring. Split it by input depth and the bottom bin falls apart.
     """
+    # Five bins, not six: the ordinal colour ramp the site uses has five
+    # steps that are reliably distinguishable from one another.
     bins = [
         ("10-19", 10, 20),
         ("20-49", 20, 50),
-        ("50-99", 50, 100),
-        ("100-299", 100, 300),
-        ("300-999", 300, 1000),
+        ("50-199", 50, 200),
+        ("200-999", 200, 1000),
         ("1000+", 1000, float("inf")),
     ]
     out = []
@@ -398,7 +400,7 @@ def reproducibility(variants):
     for label, lo, hi in bins:
         sub = [v for v in variants if lo <= v["Input"] < hi]
         random.shuffle(sub)
-        for v in sub[:450]:
+        for v in sub[:550]:
             sample.append(
                 {
                     "x": r(log_fit(v["fit_IGG10"]), 3),
@@ -616,6 +618,78 @@ def winners_curse(variants):
     }
 
 
+def worked_example(rows, wt):
+    """
+    One variant, every step of the arithmetic shown.
+
+    Chosen for being unremarkable: enough reads to be trustworthy, a fitness
+    near but not at the wild type, so none of the numbers are special cases.
+    """
+    pool = [
+        x
+        for x in rows
+        if "_" not in x["mut"]
+        and 800 < x["Input"] < 3000
+        and x["IGG20"] > 100
+        and x["hd"] == 2
+    ]
+    pool.sort(key=lambda x: abs((x["IGG20"] / wt["IGG20"]) / (x["Input"] / wt["Input"]) - 0.6))
+    v = pool[0]
+
+    var_share_in = v["Input"] / wt["Input"]
+    var_share_sel = v["IGG20"] / wt["IGG20"]
+    fit = var_share_sel / var_share_in
+
+    return {
+        "mut": v["mut"],
+        "hd": v["hd"],
+        "counts": {
+            "variantInput": v["Input"],
+            "variantSelected": v["IGG20"],
+            "wtInput": wt["Input"],
+            "wtSelected": wt["IGG20"],
+        },
+        "ratioBefore": r(var_share_in, 6),
+        "ratioAfter": r(var_share_sel, 6),
+        "fitness": r(fit, 4),
+        "condition": "IGG20",
+    }
+
+
+def stop_codon_control(rows, wt, min_input):
+    """
+    Stop-codon variants as a free negative control.
+
+    A truncated GB1 cannot bind IgG, so whatever these score is the floor of
+    the assay. Comparing them with full-length variants tells you whether a
+    low fitness value means "dead" or just "noisy".
+    """
+    def fit(x):
+        return (x[ "IGG20"] / wt["IGG20"]) / (x["Input"] / wt["Input"])
+
+    usable = [x for x in rows if x["Input"] >= min_input]
+    stops = [fit(x) for x in usable if "_" in x["mut"]]
+    coding = [fit(x) for x in usable if "_" not in x["mut"]]
+
+    def med(xs):
+        s = sorted(xs)
+        return s[len(s) // 2]
+
+    def frac_below(xs, t):
+        return r(100.0 * sum(1 for v in xs if v < t) / len(xs), 1)
+
+    return {
+        "stopN": len(stops),
+        "codingN": len(coding),
+        "stopMedian": r(med(stops), 5),
+        "codingMedian": r(med(coding), 5),
+        "stopBelow0_01": frac_below(stops, 0.01),
+        "codingBelow0_01": frac_below(coding, 0.01),
+        "stopAboveWt": sum(1 for v in stops if v > 1.0),
+        "stopAboveWtPct": r(100.0 * sum(1 for v in stops if v > 1.0) / len(stops), 2),
+    }
+
+
 def assay_conditions(variants):
     """
     The same variants, measured against three IgG concentrations.
@@ -726,6 +800,8 @@ def main():
     land = landscape_summary(variants)
     curse = winners_curse(variants)
     conds = assay_conditions(variants)
+    example = worked_example(rows, wt)
+    control = stop_codon_control(rows, wt, PUBLISHED_MIN_INPUT)
 
     print("Writing ...")
     write("raw-profile.json", profile)
@@ -738,6 +814,8 @@ def main():
     write("landscape.json", land)
     write("winners-curse.json", curse)
     write("conditions.json", conds)
+    write("worked-example.json", example)
+    write("stop-control.json", control)
     write(
         "meta.json",
         {
