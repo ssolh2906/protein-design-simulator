@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   DataTable,
@@ -13,9 +12,7 @@ import {
 import { ScatterPlot } from "@/components/charts/ScatterPlot";
 import { getEpistasis, getSingles, fmt } from "@/lib/data";
 
-export const metadata = { title: "Epistasis" };
-
-export default function Page() {
+export function EpistasisEn() {
   const epi = getEpistasis();
   const { singles } = getSingles();
   const byLabel = new Map(singles.map((s) => [s.label, s]));
@@ -30,7 +27,7 @@ export default function Page() {
   const dead = epi.negative.filter((p) => p.observed === 0).length;
 
   return (
-    <ChapterFrame slug="epistasis">
+    <>
       <Prose>
         <p>
           Chapter 7 ended on a gap. The best single mutation gives about 3.8x.
@@ -338,7 +335,7 @@ export default function Page() {
           </p>
         </Prose>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }
 

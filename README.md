@@ -4,6 +4,7 @@ A hands-on walkthrough of a real protein design dataset, from raw sequencing
 read counts to a shortlist of variants worth making.
 
 **Live site: https://ssolh2906.github.io/protein-design-simulator/**
+**한국어: https://ssolh2906.github.io/protein-design-simulator/ko/**
 
 Built for people who are new to bioinformatics and tired of tutorials that
 hand out clean data. The data here is not clean. It has stop codons where
@@ -99,11 +100,44 @@ gzip -dc data/raw/gb1_counts.tsv.gz | head -20
 pipeline/build_data.py    the whole analysis: QC, fitness, summaries
 data/raw/                 the vendored read counts
 public/data/              generated JSON, ~190 KB total
-src/lib/chapters.ts       the curriculum
+src/lib/chapters.ts       chapter order and slugs (structure only)
+src/lib/i18n.ts           all UI strings and chapter titles, per language
 src/lib/palette.ts        validated chart colours
 src/components/charts/    hand-rolled SVG charts, no chart library
-src/app/chapters/         one directory per chapter
+src/content/chapters/     chapter bodies: <slug>.tsx and <slug>.ko.tsx
+src/content/registry.tsx  maps slug + language to a chapter body
+src/app/(en)/             English routes, at the site root
+src/app/(ko)/ko/          Korean routes, under /ko/
 ```
+
+### Languages
+
+English is at the root, Korean under `/ko/`, with a toggle in the sidebar that
+keeps you on the same chapter. There is no automatic language detection:
+this is a static export, so there is no server or middleware to read
+`Accept-Language`.
+
+Each locale is a [route group](https://nextjs.org/docs/app/api-reference/file-conventions/route-groups)
+with its own root layout, so `<html lang>` is correct per language — that
+drives screen-reader pronunciation and the browser's CJK font choice. The
+documented trade-off is that switching language is a full page load rather
+than a client-side transition.
+
+Chapter prose is **duplicated per language, not extracted into a string
+dictionary**. The chapters are long-form writing containing inline emphasis,
+links and components such as `<Variant seq="VDGV" />`, none of which survives
+being flattened into JSON. Charts, tables and every number stay shared, so the
+two languages cannot disagree about the data.
+
+Korean copy keeps technical terms in English (fitness, read depth, stop codon,
+epistasis). That is how Korean bioinformatics material is normally written and
+it keeps the vocabulary transferable to papers and tools.
+
+**Translation status: 1 of 9 chapters.** Untranslated chapters fall back to
+English and say so in a notice at the top of the page, rather than 404ing or
+silently pretending to be translated. To translate one, add
+`src/content/chapters/<slug>.ko.tsx` and register it in
+`src/content/registry.tsx`.
 
 `pipeline/build_data.py` is written to be read. It is commented as a teaching
 document and it is the authority on every number the site shows.

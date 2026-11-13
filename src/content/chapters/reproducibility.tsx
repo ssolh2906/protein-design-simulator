@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   DataTable,
@@ -14,15 +13,13 @@ import { Legend } from "@/components/charts/primitives";
 import { DEPTH_RAMP } from "@/lib/palette";
 import { getReproducibility, fmt } from "@/lib/data";
 
-export const metadata = { title: "Does it reproduce?" };
-
-export default function Page() {
+export function ReproducibilityEn() {
   const rep = getReproducibility();
   const worst = rep.byDepth[0];
   const best = rep.byDepth[rep.byDepth.length - 1];
 
   return (
-    <ChapterFrame slug="reproducibility">
+    <>
       <Prose>
         <p>
           You have a fitness value for every variant. Before you believe any of
@@ -287,6 +284,6 @@ export default function Page() {
           ))}
         </ul>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }

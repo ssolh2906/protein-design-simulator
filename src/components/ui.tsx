@@ -304,11 +304,17 @@ export function CodeBlock({
 }
 
 /** The one-line summary that closes every chapter. */
-export function Takeaway({ children }: { children: ReactNode }) {
+export function Takeaway({
+  children,
+  label = "Take this with you",
+}: {
+  children: ReactNode;
+  label?: string;
+}) {
   return (
     <div className="mt-12 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-6 py-5">
       <div className="mb-2 text-[11px] font-semibold tracking-wider text-[var(--ink-muted)] uppercase">
-        Take this with you
+        {label}
       </div>
       <p className="max-w-2xl text-[15px] leading-7 font-medium text-[var(--ink)]">
         {children}

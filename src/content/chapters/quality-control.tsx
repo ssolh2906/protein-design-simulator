@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   CodeBlock,
@@ -10,16 +9,14 @@ import {
 import { ThresholdExplorer } from "@/components/charts/ThresholdExplorer";
 import { getFunnel, getSweep, fmt } from "@/lib/data";
 
-export const metadata = { title: "Quality control" };
-
-export default function Page() {
+export function QualityControlEn() {
   const { steps, minInput } = getFunnel();
   const sweep = getSweep();
   const start = steps[0].kept;
   const end = steps[steps.length - 1].kept;
 
   return (
-    <ChapterFrame slug="quality-control">
+    <>
       <Prose>
         <p>
           Quality control is where most of the thinking happens, and where most
@@ -242,6 +239,6 @@ export default function Page() {
           ))}
         </ul>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }
