@@ -1,0 +1,76 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Lets you redeploy from the Actions tab without pushing a commit.
+  workflow_dispatch:
+
+# Allow the workflow to publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Queue rather than cancel, so a run that is
+# already publishing is never interrupted half way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild the data from the raw read counts
+        # Regenerating here rather than trusting the committed JSON means a
+        # change to the pipeline can never silently disagree with the site.
+        run: python3 pipeline/build_data.py
+
+      - name: Fail if the committed data is stale
+        run: |
+          if ! git diff --quiet -- public/data; then
+            echo "::error::public/data differs from a fresh pipeline run."
+            echo "Run 'python3 pipeline/build_data.py' and commit the result."
+            git diff --stat -- public/data
+            exit 1
+          fi
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build static site
+        # BASE_PATH makes every asset and link resolve under
+        # https://<user>.github.io/<repo>/ instead of the domain root.
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+        run: npm run build
+
+      - name: Add .nojekyll
+        # Without this, GitHub Pages' Jekyll step strips the _next directory,
+        # because Jekyll ignores paths beginning with an underscore.
+        run: touch out/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
