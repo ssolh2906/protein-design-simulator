@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Prose, Section } from "@/components/ui";
 
-export const metadata = { title: "Glossary" };
-
 const TERMS: {
   term: string;
   short: string;
@@ -130,7 +128,7 @@ const TERMS: {
   },
 ];
 
-export default function Page() {
+export function GlossaryEn() {
   return (
     <article className="mx-auto max-w-3xl px-5 py-10 lg:px-10 lg:py-16">
       <header className="mb-10">

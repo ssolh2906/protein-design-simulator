@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   DataTable,
@@ -11,9 +10,7 @@ import {
 } from "@/components/ui";
 import { getWinnersCurse, getLandscape, getConditions, fmt } from "@/lib/data";
 
-export const metadata = { title: "Picking what to order" };
-
-export default function Page() {
+export function PickingHitsEn() {
   const curse = getWinnersCurse();
   const landscape = getLandscape();
   const cond = getConditions();
@@ -23,7 +20,7 @@ export default function Page() {
   const changed = 25 - curse.overlapOfTop25;
 
   return (
-    <ChapterFrame slug="picking-hits">
+    <>
       <Prose>
         <p>
           You have {fmt(landscape.n)} variants with fitness values, and you
@@ -388,6 +385,6 @@ export default function Page() {
           </p>
         </Callout>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }

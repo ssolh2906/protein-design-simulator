@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   DataTable,
@@ -14,8 +13,6 @@ import { Legend } from "@/components/charts/primitives";
 import { getConditions, fmt } from "@/lib/data";
 import { SERIES } from "@/lib/palette";
 
-export const metadata = { title: "The assay is part of the answer" };
-
 const LABEL: Record<string, string> = {
   IGG10: "Low IgG",
   IGG20: "Medium IgG",
@@ -24,7 +21,7 @@ const LABEL: Record<string, string> = {
 
 
 
-export default function Page() {
+export function AssayConditionsEn() {
   const cond = getConditions();
   const low = cond.spread.find((s) => s.condition === "IGG10")!;
   const mid = cond.spread.find((s) => s.condition === "IGG20")!;
@@ -32,7 +29,7 @@ export default function Page() {
   const top = cond.examples[0];
 
   return (
-    <ChapterFrame slug="assay-conditions">
+    <>
       <Prose>
         <p>
           Chapter 5 used the three IgG conditions to check reproducibility and
@@ -284,6 +281,6 @@ export default function Page() {
           </p>
         </Prose>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }

@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   CodeBlock,
@@ -13,9 +12,7 @@ import {
 import { RawTable } from "@/components/RawTable";
 import { getRawProfile, getRawSample, fmt } from "@/lib/data";
 
-export const metadata = { title: "The raw counts" };
-
-export default function Page() {
+export function RawCountsEn() {
   const profile = getRawProfile();
   const sample = getRawSample();
 
@@ -25,7 +22,7 @@ export default function Page() {
   const dropout = profile.pathologies.find((p) => p.id === "dropout")!;
 
   return (
-    <ChapterFrame slug="raw-counts">
+    <>
       <Prose>
         <p>
           Here is the first thing you do with any dataset: open it and count
@@ -234,6 +231,6 @@ AEEA  4   8       0       1       2
           </p>
         </Callout>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }

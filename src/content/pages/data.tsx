@@ -1,9 +1,7 @@
 import { CodeBlock, Callout, Prose, Section, DataTable } from "@/components/ui";
 import { getMeta, getRawProfile, getLandscape, fmt } from "@/lib/data";
 
-export const metadata = { title: "The data" };
-
-export default function Page() {
+export function DataEn() {
   const meta = getMeta();
   const profile = getRawProfile();
   const landscape = getLandscape();

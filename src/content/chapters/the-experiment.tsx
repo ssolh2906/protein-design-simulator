@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   DataTable,
@@ -14,15 +13,13 @@ import { BarChart } from "@/components/charts/BarChart";
 import { DEPTH_RAMP } from "@/lib/palette";
 import { getRawProfile, getMeta, fmt } from "@/lib/data";
 
-export const metadata = { title: "The experiment" };
-
-export default function Page() {
+export function TheExperimentEn() {
   const profile = getRawProfile();
   const meta = getMeta();
   const wt = profile.wildType;
 
   return (
-    <ChapterFrame slug="the-experiment">
+    <>
       <Prose>
         <p>
           Before you touch a single number, you need to know what the numbers
@@ -300,6 +297,6 @@ export default function Page() {
           </p>
         </Prose>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }

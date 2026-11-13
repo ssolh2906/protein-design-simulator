@@ -1,4 +1,3 @@
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   DataTable,
@@ -13,9 +12,7 @@ import { Heatmap } from "@/components/charts/Heatmap";
 import { Histogram } from "@/components/charts/Histogram";
 import { getSingles, getLandscape, fmt } from "@/lib/data";
 
-export const metadata = { title: "Reading the landscape" };
-
-export default function Page() {
+export function LandscapeEn() {
   const { singles, heatmap, aaOrder } = getSingles();
   const landscape = getLandscape();
 
@@ -37,7 +34,7 @@ export default function Page() {
   });
 
   return (
-    <ChapterFrame slug="landscape">
+    <>
       <Prose>
         <p>
           The data is clean, the caveats are known. Now you can do biology.
@@ -369,6 +366,6 @@ export default function Page() {
           />
         </Figure>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }

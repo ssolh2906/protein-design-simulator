@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ChapterFrame } from "@/components/ChapterFrame";
 import {
   Callout,
   CodeBlock,
@@ -14,8 +13,6 @@ import {
 } from "@/components/ui";
 import { Histogram } from "@/components/charts/Histogram";
 import { getLandscape, fmt } from "@/lib/data";
-
-export const metadata = { title: "Computing fitness" };
 
 type Worked = {
   mut: string;
@@ -49,14 +46,14 @@ function load<T>(name: string): T {
   ) as T;
 }
 
-export default function Page() {
+export function FitnessEn() {
   const ex = load<Worked>("worked-example.json");
   const ctrl = load<Control>("stop-control.json");
   const landscape = getLandscape();
   const c = ex.counts;
 
   return (
-    <ChapterFrame slug="fitness">
+    <>
       <Prose>
         <p>
           You now have a clean table of read counts. This chapter turns two
@@ -304,7 +301,7 @@ export default function Page() {
           />
         </StatGrid>
       </Section>
-    </ChapterFrame>
+    </>
   );
 }
 
