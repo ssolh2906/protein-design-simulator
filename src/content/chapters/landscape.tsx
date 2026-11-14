@@ -12,7 +12,7 @@ import { Heatmap } from "@/components/charts/Heatmap";
 import { Histogram } from "@/components/charts/Histogram";
 import { getSingles, getLandscape, fmt } from "@/lib/data";
 
-export function LandscapeEn() {
+export function Landscape() {
   const { singles, heatmap, aaOrder } = getSingles();
   const landscape = getLandscape();
 

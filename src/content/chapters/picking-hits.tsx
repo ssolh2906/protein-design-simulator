@@ -10,7 +10,7 @@ import {
 } from "@/components/ui";
 import { getWinnersCurse, getLandscape, getConditions, fmt } from "@/lib/data";
 
-export function PickingHitsEn() {
+export function PickingHits() {
   const curse = getWinnersCurse();
   const landscape = getLandscape();
   const cond = getConditions();

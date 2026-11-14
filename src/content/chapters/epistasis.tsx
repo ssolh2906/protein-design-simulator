@@ -12,7 +12,7 @@ import {
 import { ScatterPlot } from "@/components/charts/ScatterPlot";
 import { getEpistasis, getSingles, fmt } from "@/lib/data";
 
-export function EpistasisEn() {
+export function Epistasis() {
   const epi = getEpistasis();
   const { singles } = getSingles();
   const byLabel = new Map(singles.map((s) => [s.label, s]));

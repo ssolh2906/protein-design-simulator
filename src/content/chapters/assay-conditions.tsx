@@ -21,7 +21,7 @@ const LABEL: Record<string, string> = {
 
 
 
-export function AssayConditionsEn() {
+export function AssayConditions() {
   const cond = getConditions();
   const low = cond.spread.find((s) => s.condition === "IGG10")!;
   const mid = cond.spread.find((s) => s.condition === "IGG20")!;

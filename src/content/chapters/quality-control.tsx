@@ -9,7 +9,7 @@ import {
 import { ThresholdExplorer } from "@/components/charts/ThresholdExplorer";
 import { getFunnel, getSweep, fmt } from "@/lib/data";
 
-export function QualityControlEn() {
+export function QualityControl() {
   const { steps, minInput } = getFunnel();
   const sweep = getSweep();
   const start = steps[0].kept;

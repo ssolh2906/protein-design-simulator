@@ -13,7 +13,7 @@ import { BarChart } from "@/components/charts/BarChart";
 import { DEPTH_RAMP } from "@/lib/palette";
 import { getRawProfile, getMeta, fmt } from "@/lib/data";
 
-export function TheExperimentEn() {
+export function TheExperiment() {
   const profile = getRawProfile();
   const meta = getMeta();
   const wt = profile.wildType;

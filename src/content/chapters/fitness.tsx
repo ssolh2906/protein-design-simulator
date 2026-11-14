@@ -46,7 +46,7 @@ function load<T>(name: string): T {
   ) as T;
 }
 
-export function FitnessEn() {
+export function Fitness() {
   const ex = load<Worked>("worked-example.json");
   const ctrl = load<Control>("stop-control.json");
   const landscape = getLandscape();

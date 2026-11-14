@@ -12,7 +12,7 @@ import {
 import { RawTable } from "@/components/RawTable";
 import { getRawProfile, getRawSample, fmt } from "@/lib/data";
 
-export function RawCountsEn() {
+export function RawCounts() {
   const profile = getRawProfile();
   const sample = getRawSample();
 

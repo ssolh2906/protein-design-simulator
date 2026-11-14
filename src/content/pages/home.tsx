@@ -12,9 +12,11 @@ const COPY = {
     h1a: "160,000 protein variants.",
     h1b: "One very messy file.",
     lead1:
-      "This is a hands-on tour of a real protein engineering dataset. You start with raw sequencing read counts, exactly as they came off the machine. You finish with a shortlist of protein variants you would spend real money to make.",
+      "A hands-on run through real protein engineering data. You start with raw sequencing read counts, exactly as they came off the machine. You finish with a shortlist of variants you would spend real money to make.",
     lead2:
-      "Nothing here is simulated. The numbers come from a published experiment, and the mess is the mess the original authors had to deal with.",
+      "The numbers come from a published experiment, and this mess is the mess the original authors actually dealt with.",
+    cta: "Start here",
+    ctaSub: "Chapter 1 · 6 min",
     statRows: "Rows in the raw file",
     statRowsHint: "not 160,000",
     statStops: "Contain a stop codon",
@@ -24,9 +26,9 @@ const COPY = {
     statBetter: "Beat the wild type",
     whoTitle: "Who this is for",
     who1a:
-      "You are new to bioinformatics, and tutorials keep handing you clean data. Real data is not clean. It has stop codons where proteins should be, variants with four reads that look like miracle hits, and a quality cutoff that somebody picked by judgement and wrote ",
+      "Anyone who wants to experience picking protein candidates out of messy data. Data with stop codons where proteins should be, variants with four reads that look like miracle hits, and a quality cutoff somebody set by judgement and wrote ",
     who1b: " next to.",
-    who2: "Every chapter shows you the real numbers, explains the decision, and shows what the decision costs. No step is hidden behind a library call.",
+    who2: "Every chapter shows the real numbers, explains the decision, and shows that decision's payoff.",
     walkthrough: "The walkthrough",
     chaptersAbout: (n: number, m: number) =>
       `${n} chapters · about ${m} min`,
@@ -45,7 +47,9 @@ const COPY = {
     lead1:
       "실제 protein engineering 데이터를 직접 만져보는 실습입니다. 시작은 장비에서 나온 그대로의 raw sequencing read count입니다. 끝은 실제로 돈을 들여 만들 만한 variant 후보 목록입니다.",
     lead2:
-      "여기에 시뮬레이션은 없습니다. 숫자는 출판된 실험에서 나온 것이고, 이 지저분함은 원 저자들이 실제로 감당해야 했던 그 지저분함입니다.",
+      "주어진 데이터의 숫자는 논문에서 나온 것이고, 이 지저분함은 원 저자들이 실제로 겪었던 그 지저분함입니다.",
+    cta: "시작하기",
+    ctaSub: "1장 · 6분",
     statRows: "raw 파일의 행 수",
     statRowsHint: "160,000이 아님",
     statStops: "stop codon 포함",
@@ -55,10 +59,10 @@ const COPY = {
     statBetter: "wild type보다 나음",
     whoTitle: "이런 분께",
     who1a:
-      "bioinformatics를 막 시작했는데, 튜토리얼마다 깨끗한 데이터만 줍니다. 실제 데이터는 깨끗하지 않습니다. protein이 있어야 할 자리에 stop codon이 있고, read가 4개뿐인데 기적의 hit처럼 보이는 variant가 있고, 누군가 감으로 정해놓고 옆에 ",
+      "지저분한 데이터로부터 protein 후보 선별을 체험해보고 싶은 사람. protein이 있어야 할 자리에 stop codon이 있고, read가 4개뿐인데 기적의 hit처럼 보이는 variant가 있고, 누군가 감으로 정해놓고 옆에 ",
     who1b: " 이라고 적어둔 quality cutoff가 있습니다.",
     who2:
-      "모든 챕터가 실제 숫자를 보여주고, 어떤 결정을 왜 내렸는지 설명하고, 그 결정이 무엇을 치르는지 보여줍니다. 라이브러리 호출 뒤에 숨긴 단계는 없습니다.",
+      "모든 챕터가 실제 숫자를 보여주고, 어떤 결정을 왜 내렸는지 설명하고, 그 결정의 페이오프를 보여줍니다.",
     walkthrough: "챕터",
     chaptersAbout: (n: number, m: number) => `${n}개 챕터 · 약 ${m}분`,
     sourceTitle: "데이터 출처",
@@ -98,6 +102,30 @@ export function Home({ lang }: { lang: Lang }) {
         <p className="mt-4 max-w-2xl text-[17px] leading-8 text-[var(--ink-secondary)]">
           {t.lead2}
         </p>
+
+        <Link
+          href={href(lang, `/chapters/${CHAPTERS[0].slug}`)}
+          className="group mt-8 inline-flex items-center gap-3 rounded-xl bg-[var(--ink)] px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] transition-opacity hover:opacity-85"
+        >
+          {t.cta}
+          <span className="text-[12px] opacity-70">{t.ctaSub}</span>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 16 16"
+            aria-hidden
+            className="transition-transform group-hover:translate-x-0.5"
+          >
+            <path
+              d="M6 3l5 5-5 5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
       </header>
 
       {t.translationNote && done < CHAPTERS.length && (
