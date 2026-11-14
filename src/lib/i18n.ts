@@ -132,7 +132,7 @@ export const CHAPTER_COPY: Record<Lang, Record<string, ChapterCopy>> = {
     reproducibility: {
       title: "Does it reproduce?",
       summary:
-        "The correlation looks fine. Split it by read depth and the bottom falls out.",
+        "The correlation looks fine. Then you split it by read depth.",
       takeaway:
         "An aggregate correlation hides where your data is worthless. Always stratify by depth.",
     },
@@ -197,7 +197,7 @@ export const CHAPTER_COPY: Record<Lang, Record<string, ChapterCopy>> = {
     reproducibility: {
       title: "재현이 되는가?",
       summary:
-        "correlation은 괜찮아 보인다. read depth로 쪼개면 바닥이 빠진다.",
+        "correlation은 괜찮아 보인다. 그다음 read depth로 쪼개본다.",
       takeaway:
         "전체 correlation은 데이터가 쓸모없는 구간을 가립니다. 항상 depth로 나눠서 보세요.",
     },

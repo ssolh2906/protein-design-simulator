@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { chapterBySlug, neighbours } from "@/lib/chapters";
 import { CHAPTER_COPY, UI, href, type Lang } from "@/lib/i18n";
-import { getChapterContent } from "@/content/registry";
+import { getChapterContent, isStepped } from "@/content/registry";
 import { Takeaway } from "@/components/ui";
 
 /**
@@ -18,6 +18,8 @@ export function ChapterFrame({ slug, lang }: { slug: string; lang: Lang }) {
   const ui = UI[lang];
   const { prev, next } = neighbours(slug);
   const { Content, isTranslated } = getChapterContent(slug, lang);
+  const stepped = isStepped(slug);
+  const takeaway = <Takeaway label={ui.takeaway}>{copy.takeaway}</Takeaway>;
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-10 lg:px-10 lg:py-16">
@@ -54,9 +56,9 @@ export function ChapterFrame({ slug, lang }: { slug: string; lang: Lang }) {
         </div>
       )}
 
-      <Content />
+      {stepped ? <Content takeaway={takeaway} /> : <Content />}
 
-      <Takeaway label={ui.takeaway}>{copy.takeaway}</Takeaway>
+      {!stepped && takeaway}
 
       <nav className="mt-10 flex gap-3 border-t border-[var(--border)] pt-6">
         {prev ? (

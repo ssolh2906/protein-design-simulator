@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type { Lang } from "@/lib/i18n";
 
 import { TheExperimentEn } from "./chapters/the-experiment";
@@ -23,7 +23,21 @@ import { PickingHitsEn } from "./chapters/picking-hits";
  *
  * A missing language falls back to English, and the frame shows a notice.
  */
-const CHAPTER_CONTENT: Record<string, Partial<Record<Lang, ComponentType>>> = {
+export type ChapterProps = { takeaway?: ReactNode };
+
+/**
+ * Stepped chapters render one screen at a time and place the takeaway on
+ * their final step themselves. The frame must not also render it at the
+ * bottom of the page, where it would give the answer away on step 1.
+ */
+const STEPPED = new Set<string>(["reproducibility"]);
+
+export const isStepped = (slug: string) => STEPPED.has(slug);
+
+const CHAPTER_CONTENT: Record<
+  string,
+  Partial<Record<Lang, ComponentType<ChapterProps>>>
+> = {
   "the-experiment": { en: TheExperimentEn },
   "raw-counts": { en: RawCountsEn },
   "quality-control": { en: QualityControlEn, ko: QualityControlKo },
