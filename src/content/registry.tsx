@@ -46,12 +46,14 @@ type Entry = {
 const CHAPTER_CONTENT: Record<string, Entry> = {
   "the-experiment": {
     Component: TheExperiment,
-    langs: ["en"],
+    langs: ["en", "ko"],
+    stepped: true,
   },
-  "raw-counts": { Component: RawCounts, langs: ["en"] },
+  "raw-counts": { Component: RawCounts, langs: ["en", "ko"], stepped: true },
   "quality-control": {
     Component: QualityControl,
-    langs: ["en"],
+    langs: ["en", "ko"],
+    stepped: true,
   },
   fitness: { Component: Fitness, langs: ["en"] },
   reproducibility: {
