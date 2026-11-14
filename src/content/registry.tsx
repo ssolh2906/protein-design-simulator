@@ -55,7 +55,7 @@ const CHAPTER_CONTENT: Record<string, Entry> = {
     langs: ["en", "ko"],
     stepped: true,
   },
-  fitness: { Component: Fitness, langs: ["en"] },
+  fitness: { Component: Fitness, langs: ["en", "ko"], stepped: true },
   reproducibility: {
     Component: Reproducibility,
     langs: ["en", "ko"],
@@ -63,13 +63,15 @@ const CHAPTER_CONTENT: Record<string, Entry> = {
   },
   "assay-conditions": {
     Component: AssayConditions,
-    langs: ["en"],
+    langs: ["en", "ko"],
+    stepped: true,
   },
-  landscape: { Component: Landscape, langs: ["en"] },
-  epistasis: { Component: Epistasis, langs: ["en"] },
+  landscape: { Component: Landscape, langs: ["en", "ko"], stepped: true },
+  epistasis: { Component: Epistasis, langs: ["en", "ko"], stepped: true },
   "picking-hits": {
     Component: PickingHits,
-    langs: ["en"],
+    langs: ["en", "ko"],
+    stepped: true,
   },
 };
 
