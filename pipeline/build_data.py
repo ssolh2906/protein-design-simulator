@@ -63,6 +63,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RAW_COUNTS = ROOT / "data" / "raw" / "gb1_counts.tsv.gz"
 RAW_WT = ROOT / "data" / "raw" / "gb1_wt_counts.tsv"
+RAW_STRUCT_GB1 = ROOT / "data" / "raw" / "1pga.pdb.gz"
+RAW_STRUCT_COMPLEX = ROOT / "data" / "raw" / "1fcc.pdb.gz"
 OUT_DIR = ROOT / "public" / "data"
 
 # The four randomised positions, in the order they appear in the variant string.
@@ -769,6 +771,205 @@ def threshold_sweep(rows, wt):
 
 
 # --------------------------------------------------------------------------
+# Step 10. The structure, so the four sites stop being abstract numbers.
+#
+# Everything above this point is counting. This part is geometry, and it is
+# here for one reason: "V39, D40, G41 and V54 sit next to each other" is a
+# claim, and a claim in a teaching document should come with its evidence.
+# We measure the distances rather than asserting them.
+#
+# Two structures are read, both from the RCSB PDB:
+#
+#   1PGA  GB1 itself -- the B1 domain of streptococcal protein G, X-ray.
+#         This is the exact protein the DMS library was built from.
+#
+#   1FCC  A protein G domain bound to the Fc of human IgG. This is what
+#         "binding" physically means in this assay. Caveat, stated on the
+#         site as well: 1FCC contains the C2 domain, a close homologue of
+#         B1, because no B1-Fc complex of this quality exists. The binding
+#         mode is the same; the sequence is not identical.
+#
+# We keep only the alpha carbons. A CA trace is enough to show a fold and a
+# binding interface, and it keeps the JSON small enough to ship.
+# --------------------------------------------------------------------------
+
+AA3_TO_1 = {
+    "ALA": "A", "ARG": "R", "ASN": "N", "ASP": "D", "CYS": "C",
+    "GLN": "Q", "GLU": "E", "GLY": "G", "HIS": "H", "ILE": "I",
+    "LEU": "L", "LYS": "K", "MET": "M", "PHE": "F", "PRO": "P",
+    "SER": "S", "THR": "T", "TRP": "W", "TYR": "Y", "VAL": "V",
+}
+
+
+def read_pdb(path):
+    """Pull CA atoms and secondary-structure records out of a PDB file.
+
+    Written out rather than imported from a library so the parsing is
+    visible: PDB is a fixed-column format, and the columns are the spec.
+    """
+    chains = {}       # chain id -> list of (resi, one-letter, x, y, z)
+    helix = set()     # (chain, resi) inside an alpha helix
+    strand = set()    # (chain, resi) inside a beta strand
+    header = {"id": path.stem.upper()[:4], "title": "", "method": "", "resolution": None}
+
+    with gzip.open(path, "rt") as fh:
+        for line in fh:
+            tag = line[:6]
+
+            if tag == "TITLE ":
+                header["title"] += " " + line[10:80].strip()
+
+            elif tag == "EXPDTA":
+                header["method"] = header["method"] or line[10:80].strip()
+
+            elif line.startswith("REMARK   2 RESOLUTION."):
+                try:
+                    header["resolution"] = float(line[23:30])
+                except ValueError:
+                    pass  # "NOT APPLICABLE" for NMR structures
+
+            elif tag == "HELIX ":
+                ch = line[19]
+                for i in range(int(line[21:25]), int(line[33:37]) + 1):
+                    helix.add((ch, i))
+
+            elif tag == "SHEET ":
+                ch = line[21]
+                for i in range(int(line[22:26]), int(line[33:37]) + 1):
+                    strand.add((ch, i))
+
+            elif tag == "ATOM  " and line[12:16].strip() == "CA":
+                # Alternate conformations: keep only the first.
+                if line[16] not in (" ", "A"):
+                    continue
+                ch = line[21]
+                resi = int(line[22:26])
+                seen = chains.setdefault(ch, {})
+                if resi in seen:
+                    continue
+                seen[resi] = (
+                    AA3_TO_1.get(line[17:20].strip(), "X"),
+                    float(line[30:38]),
+                    float(line[38:46]),
+                    float(line[46:54]),
+                )
+
+            elif tag == "ENDMDL":
+                break  # NMR ensembles: first model only
+
+    header["title"] = " ".join(header["title"].split()).title()
+    return header, chains, helix, strand
+
+
+def _chain_payload(ch_id, residues, helix, strand, role, centre):
+    """One chain, centred on the shared origin and rounded for JSON."""
+    order = sorted(residues)
+    cx, cy, cz = centre
+    return {
+        "id": ch_id,
+        "role": role,
+        "resi": order,
+        "seq": "".join(residues[i][0] for i in order),
+        # Secondary structure per residue: H helix, E strand, C coil.
+        "ss": "".join(
+            "H" if (ch_id, i) in helix else "E" if (ch_id, i) in strand else "C"
+            for i in order
+        ),
+        "ca": [
+            [r(residues[i][1] - cx, 2), r(residues[i][2] - cy, 2), r(residues[i][3] - cz, 2)]
+            for i in order
+        ],
+    }
+
+
+def _centroid(chains, keep):
+    pts = [xyz[1:] for ch, res in chains.items() if ch in keep for xyz in res.values()]
+    n = len(pts)
+    return tuple(sum(p[k] for p in pts) / n for k in range(3))
+
+
+def _extent(chains, keep, centre):
+    """Distance from the centre to the furthest atom, for camera framing."""
+    cx, cy, cz = centre
+    return max(
+        math.dist((x, y, z), (cx, cy, cz))
+        for ch, res in chains.items() if ch in keep
+        for _, x, y, z in res.values()
+    )
+
+
+def structure():
+    # ---- GB1 alone (1PGA) -------------------------------------------------
+    header, chains, helix, strand = read_pdb(RAW_STRUCT_GB1)
+    keep = {"A"}
+    centre = _centroid(chains, keep)
+    res = chains["A"]
+
+    # The claim this whole section exists to check: are the four randomised
+    # positions actually neighbours in the folded protein?
+    site_pairs = []
+    for a_i in range(len(POSITIONS)):
+        for b_i in range(a_i + 1, len(POSITIONS)):
+            a, b = POSITIONS[a_i], POSITIONS[b_i]
+            site_pairs.append({
+                "a": a,
+                "b": b,
+                "ca": r(math.dist(res[a][1:], res[b][1:]), 1),
+                "apart": abs(a - b),  # separation along the sequence
+            })
+
+    # Sanity: the PDB must agree with the variant string the paper uses.
+    observed = "".join(res[p][0] for p in POSITIONS)
+    if observed != WT_VARIANT:
+        raise SystemExit(
+            f"1PGA residues {POSITIONS} read {observed!r}, expected {WT_VARIANT!r}. "
+            "The structure and the count table disagree about the wild type."
+        )
+
+    gb1 = {
+        "pdb": header["id"],
+        "title": header["title"],
+        "method": header["method"].title(),
+        "resolution": header["resolution"],
+        "extent": r(_extent(chains, keep, centre), 1),
+        "chains": [_chain_payload("A", res, helix, strand, "gb1", centre)],
+        "sites": [
+            {
+                "resi": p,
+                "aa": res[p][0],
+                # Where the site sits in the fold, from the PDB's own records.
+                "ss": "H" if ("A", p) in helix else "E" if ("A", p) in strand else "C",
+            }
+            for p in POSITIONS
+        ],
+        "sitePairs": site_pairs,
+    }
+
+    # ---- The complex (1FCC) ----------------------------------------------
+    cheader, cchains, chelix, cstrand = read_pdb(RAW_STRUCT_COMPLEX)
+    # Chains A and B are the two halves of the IgG Fc dimer; C is one copy of
+    # the protein G domain. D is the second copy, left out so the picture
+    # shows one binding event rather than two.
+    ckeep = {"A", "B", "C"}
+    ccentre = _centroid(cchains, ckeep)
+    roles = {"A": "igg", "B": "igg", "C": "domain"}
+
+    complex_ = {
+        "pdb": cheader["id"],
+        "title": cheader["title"],
+        "method": cheader["method"].title(),
+        "resolution": cheader["resolution"],
+        "extent": r(_extent(cchains, ckeep, ccentre), 1),
+        "chains": [
+            _chain_payload(c, cchains[c], chelix, cstrand, roles[c], ccentre)
+            for c in ("A", "B", "C")
+        ],
+    }
+
+    return {"gb1": gb1, "complex": complex_}
+
+
+# --------------------------------------------------------------------------
 
 def write(name, payload):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -803,6 +1004,12 @@ def main():
     example = worked_example(rows, wt)
     control = stop_codon_control(rows, wt, PUBLISHED_MIN_INPUT)
 
+    print("Reading structures ...")
+    struct = structure()
+    pairs = struct["gb1"]["sitePairs"]
+    print(f"  four sites, CA distances "
+          f"{min(x['ca'] for x in pairs)}-{max(x['ca'] for x in pairs)} A")
+
     print("Writing ...")
     write("raw-profile.json", profile)
     write("raw-sample.json", build_raw_sample(rows))
@@ -816,6 +1023,7 @@ def main():
     write("conditions.json", conds)
     write("worked-example.json", example)
     write("stop-control.json", control)
+    write("structure.json", struct)
     write(
         "meta.json",
         {
@@ -829,6 +1037,18 @@ def main():
                 "repo": "https://github.com/wchnicholas/ProteinGFourMutants",
                 "licence": "CC BY 4.0",
             },
+            "structures": [
+                {
+                    "pdb": struct["gb1"]["pdb"],
+                    "title": struct["gb1"]["title"],
+                    "doi": "10.2210/pdb1pga/pdb",
+                },
+                {
+                    "pdb": struct["complex"]["pdb"],
+                    "title": struct["complex"]["title"],
+                    "doi": "10.2210/pdb1fcc/pdb",
+                },
+            ],
         },
     )
     print("Done.")

@@ -12,14 +12,27 @@ import { DEPTH_RAMP } from "@/lib/palette";
 import { Steps, Step } from "@/components/learn/Steps";
 import { Quiz, Reveal } from "@/components/learn/Quiz";
 import { ToolCode } from "@/components/learn/ToolCode";
-import { getRawProfile, getMeta, fmt } from "@/lib/data";
+import { StructureSwitch, FourSites } from "@/components/viz/StructureFigure";
+import { SelectionFlow } from "@/components/viz/SelectionFlow";
+import { getRawProfile, getMeta, getStructures, fmt } from "@/lib/data";
 import type { ChapterProps } from "@/content/registry";
 
 export function TheExperiment({ lang, takeaway }: ChapterProps) {
   const profile = getRawProfile();
   const meta = getMeta();
+  const struct = getStructures();
   const wt = profile.wildType;
   const t = COPY[lang];
+
+  // The claim in this chapter is that the four randomised positions are
+  // neighbours in the fold. V39 and V54 are the furthest apart in sequence,
+  // so that pair is the one worth quoting. Measured by the pipeline from
+  // 1PGA, not asserted here.
+  const far = struct.gb1.sitePairs?.find((x) => x.a === 39 && x.b === 54);
+  const sites = (struct.gb1.sites ?? []).map((x) => ({
+    resi: x.resi,
+    aa: x.aa,
+  }));
 
   return (
     <Steps
@@ -30,6 +43,20 @@ export function TheExperiment({ lang, takeaway }: ChapterProps) {
         /* 1 --------------------------------------------------------- */
         <Step key="protein" title={t.s1Title}>
           <Prose>{t.s1Body}</Prose>
+
+          <Figure
+            title={t.figFoldTitle}
+            subtitle={t.figFoldSub}
+            caption={t.figFoldCaption}
+            source={`${struct.gb1.pdb} · ${struct.complex.pdb} · RCSB PDB`}
+          >
+            <StructureSwitch
+              alone={struct.gb1}
+              bound={struct.complex}
+              labels={t.structLabels}
+            />
+          </Figure>
+
           <Callout kind="note" title={t.s1NoteTitle}>
             {t.s1Note}
           </Callout>
@@ -38,6 +65,15 @@ export function TheExperiment({ lang, takeaway }: ChapterProps) {
         /* 2 --------------------------------------------------------- */
         <Step key="sites" title={t.s2Title}>
           <Prose>{t.s2Body}</Prose>
+
+          <Figure
+            title={t.figSitesTitle}
+            subtitle={t.figSitesSub}
+            caption={t.figSitesCaption(far?.ca ?? 0, far?.apart ?? 0)}
+            source={`${struct.gb1.pdb} · ${struct.gb1.method} ${struct.gb1.resolution} Å`}
+          >
+            <FourSites model={struct.gb1} sites={sites} labels={t.siteLabels} />
+          </Figure>
 
           <div className="my-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-5 text-center">
             <div className="font-mono text-[13px] tracking-widest text-[var(--ink-muted)]">
@@ -60,26 +96,14 @@ export function TheExperiment({ lang, takeaway }: ChapterProps) {
         <Step key="assay" title={t.s3Title}>
           <Prose>{t.s3Intro}</Prose>
 
-          <ol className="my-6 max-w-2xl space-y-3">
-            {t.s3Steps.map((s, i) => (
-              <li
-                key={i}
-                className="flex gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4"
-              >
-                <span className="tabular mt-0.5 w-4 shrink-0 text-[13px] font-semibold text-[var(--series-1)]">
-                  {i + 1}
-                </span>
-                <span>
-                  <span className="block text-[14px] font-medium text-[var(--ink)]">
-                    {s.t}
-                  </span>
-                  <span className="mt-1 block text-[13.5px] leading-6 text-[var(--ink-secondary)]">
-                    {s.d}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ol>
+          <Figure title={t.figFlowTitle} subtitle={t.figFlowSub}>
+            <SelectionFlow
+              stations={t.flowStations}
+              caption={t.flowCaptions}
+              label={t.flowAria}
+              readout={t.flowReadout}
+            />
+          </Figure>
 
           <Callout kind="key" title={t.s3KeyTitle}>
             {t.s3Key}
@@ -231,6 +255,70 @@ const COPY = {
   en: {
     labels: ["The protein", "Four sites", "The assay", "The file", "Coverage"],
 
+
+    figFoldTitle: "GB1, and what it binds",
+    figFoldSub: "Four beta strands packed against one helix",
+    figFoldCaption: (
+      <>
+        The second view is the same kind of domain held by the Fc region of an
+        antibody. Binding is a physical contact, and that contact is the only
+        thing this experiment measures. One caveat, since this site does not
+        hide them: no B1–Fc complex of comparable quality exists, so the bound
+        view uses C2, a close homologue that docks the same way. Every{" "}
+        <em>number</em> on this site comes from B1.
+      </>
+    ),
+    structLabels: {
+      alone: "GB1 alone",
+      bound: "Bound to IgG",
+      hint: "Drag to turn it.",
+      ariaAlone:
+        "A slowly rotating backbone of the GB1 fold: a four-stranded beta sheet packed against a single alpha helix.",
+      ariaBound:
+        "A slowly rotating backbone of a protein G domain, in blue, docked against the two grey chains of an antibody Fc region.",
+      legendDomain: "protein G domain",
+      legendIgg: "IgG Fc",
+    },
+
+    figSitesTitle: "The four randomised positions",
+    figSitesSub: "Marked in the fold, and again along the sequence",
+    figSitesCaption: (ca: number, apart: number) => (
+      <>
+        V39, D40 and G41 are consecutive. V54 is <strong>{apart} residues
+        away</strong> along the chain and still only <strong>{ca} Å</strong>{" "}
+        from V39 once the protein folds. That is the reason these four were
+        picked: side chains this close are the ones that can interact, so if
+        combined effects exist anywhere, they exist here.
+      </>
+    ),
+    siteLabels: {
+      hint: "Drag to turn it. Hover a marker to find it on the sequence.",
+      aria: "The GB1 backbone with the four randomised positions marked: V39, D40 and G41 in a loop, and V54 in the last beta strand, all packed together on one face.",
+      ariaRuler:
+        "The 56-residue sequence drawn as a bar, with helix and strand regions raised. V39, D40 and G41 are adjacent; V54 sits thirteen residues later.",
+      helix: "helix",
+      strand: "strand",
+      loop: "loop",
+    },
+
+    figFlowTitle: "One tube, 160,000 proteins",
+    figFlowSub: "Nothing here is measured one variant at a time",
+    flowStations: ["Build", "Count", "Select", "Count again"] as [string, string, string, string],
+    flowCaptions: [
+      "DNA is synthesised with all four positions randomised. Every variant sits in the same tube, and not in equal amounts — that unevenness matters in chapter 3.",
+      "Sequencing counts each variant before anything is selected. This is the Input column: the starting line.",
+      "The whole pool is held against IgG. Binders stay; the rest are washed away. No variant is ever tested on its own.",
+      "Sequencing counts what is left. Binders now take a far bigger share than at the start, and that shift is the measurement. Three IgG concentrations were used, so there are three selected columns.",
+    ] as [string, string, string, string],
+    flowAria:
+      "An animation of the selection: a mixed population of variants is counted, held against IgG so that non-binders wash away, and counted again, leaving binders at a much higher share.",
+    flowReadout: {
+      before: "before selection",
+      after: "after selection",
+      binds: "held by IgG",
+      washed: "washed away",
+    },
+
     s1Title: "GB1, and what counts as “better”",
     s1Body: (
       <>
@@ -296,24 +384,6 @@ const COPY = {
         Everything is pooled and sequencing does the counting.
       </p>
     ),
-    s3Steps: [
-      {
-        t: "Build the library",
-        d: "Synthesise DNA with all four positions randomised. Every variant is present, but not in equal amounts — that unevenness matters later.",
-      },
-      {
-        t: "Sequence the input",
-        d: "Count how many reads each variant has before any selection. This is the Input column.",
-      },
-      {
-        t: "Select for binding",
-        d: "Display the proteins and pull down the ones that stick to IgG. Good binders are enriched; the rest are washed away.",
-      },
-      {
-        t: "Sequence again",
-        d: "Count each variant after selection. Three IgG concentrations were used, giving three selected columns.",
-      },
-    ],
     s3KeyTitle: "The core idea, and it is the whole thing",
     s3Key: (
       <p>
@@ -436,6 +506,70 @@ const COPY = {
   ko: {
     labels: ["단백질", "네 자리", "assay", "파일", "coverage"],
 
+
+    figFoldTitle: "GB1, 그리고 무엇에 붙는지",
+    figFoldSub: "beta strand 네 개가 helix 하나에 붙어 있습니다",
+    figFoldCaption: (
+      <>
+        두 번째 화면은 같은 계열의 domain이 항체의 Fc region에 붙잡혀 있는
+        모습입니다. 결합은 물리적인 접촉이고, 이 실험이 재는 건 그 접촉
+        하나뿐입니다. 한 가지 단서는 숨기지 않고 말하자면, B1–Fc 복합체 중
+        이만한 품질의 구조가 없어서 결합 화면은 같은 방식으로 붙는 가까운
+        homologue인 C2를 씁니다. 이 사이트의 모든 <em>숫자</em>는 B1에서
+        나온 것입니다.
+      </>
+    ),
+    structLabels: {
+      alone: "GB1 혼자",
+      bound: "IgG에 붙은 모습",
+      hint: "끌어서 돌려보세요.",
+      ariaAlone:
+        "천천히 회전하는 GB1 backbone. beta strand 네 가닥으로 된 sheet가 alpha helix 하나에 붙어 있습니다.",
+      ariaBound:
+        "천천히 회전하는 구조. 파란색 protein G domain이 회색 항체 Fc region 두 가닥에 붙어 있습니다.",
+      legendDomain: "protein G domain",
+      legendIgg: "IgG Fc",
+    },
+
+    figSitesTitle: "무작위화된 네 자리",
+    figSitesSub: "접힌 구조에서 한 번, 서열에서 다시 한 번",
+    figSitesCaption: (ca: number, apart: number) => (
+      <>
+        V39, D40, G41은 서로 붙어 있습니다. V54는 사슬을 따라가면{" "}
+        <strong>{apart}칸</strong> 떨어져 있는데, 단백질이 접히고 나면 V39에서{" "}
+        <strong>{ca} Å</strong>밖에 안 됩니다. 이 넷을 고른 이유가 바로
+        이것입니다. 이만큼 가까운 side chain이라야 서로 간섭할 수 있으니,
+        합쳐진 효과가 어딘가에 있다면 여기에 있습니다.
+      </>
+    ),
+    siteLabels: {
+      hint: "끌어서 돌려보세요. 표시된 자리에 마우스를 올리면 서열에서 어디인지 보입니다.",
+      aria: "GB1 backbone에 무작위화된 네 자리가 표시된 모습. V39, D40, G41은 loop에 있고 V54는 마지막 beta strand에 있으며, 넷이 한쪽 면에 모여 있습니다.",
+      ariaRuler:
+        "56개 residue 서열을 막대로 그린 그림. helix와 strand 구간이 두껍게 표시돼 있습니다. V39, D40, G41은 붙어 있고 V54는 13칸 뒤에 있습니다.",
+      helix: "helix",
+      strand: "strand",
+      loop: "loop",
+    },
+
+    figFlowTitle: "tube 하나, 단백질 16만 개",
+    figFlowSub: "여기서는 어떤 것도 variant 하나씩 재지 않습니다",
+    flowStations: ["만들기", "세기", "선별", "다시 세기"] as [string, string, string, string],
+    flowCaptions: [
+      "네 자리를 전부 무작위화한 DNA를 합성합니다. 모든 variant가 같은 tube 안에 있고, 양은 제각각입니다. 이 불균등함이 3장에서 중요해집니다.",
+      "아직 아무것도 선별하기 전에 각 variant를 셉니다. 이게 Input 열, 출발선입니다.",
+      "pool 전체를 IgG에 걸어둡니다. 붙는 것은 남고 나머지는 씻겨 나갑니다. 어떤 variant도 따로 시험하지 않습니다.",
+      "남은 것을 다시 셉니다. 붙는 variant의 몫이 출발선보다 훨씬 커졌습니다. 이 변화가 곧 측정값입니다. IgG 농도 세 가지를 썼기 때문에 selected 열이 세 개 나옵니다.",
+    ] as [string, string, string, string],
+    flowAria:
+      "selection 과정 애니메이션. 섞여 있는 variant 집단을 세고, IgG에 걸어 붙지 않는 것을 씻어내고, 다시 셉니다. 붙는 variant의 비율이 훨씬 높아집니다.",
+    flowReadout: {
+      before: "selection 전",
+      after: "selection 후",
+      binds: "IgG가 붙잡음",
+      washed: "씻겨 나감",
+    },
+
     s1Title: "GB1, 그리고 여기서 “좋다”의 뜻",
     s1Body: (
       <>
@@ -500,24 +634,6 @@ const COPY = {
         섞어놓고 sequencing이 세어줍니다.
       </p>
     ),
-    s3Steps: [
-      {
-        t: "library 만들기",
-        d: "네 자리를 전부 무작위화한 DNA를 합성합니다. 모든 variant가 들어 있지만 양이 똑같지는 않습니다. 이 불균등함이 나중에 중요해집니다.",
-      },
-      {
-        t: "input sequencing",
-        d: "selection 전에 각 variant의 read가 몇 개인지 셉니다. 이게 Input 열입니다.",
-      },
-      {
-        t: "결합으로 selection",
-        d: "단백질을 전시해놓고 IgG에 붙는 것들만 끌어냅니다. 잘 붙는 variant는 많아지고 나머지는 씻겨 나갑니다.",
-      },
-      {
-        t: "다시 sequencing",
-        d: "selection 후 각 variant를 셉니다. IgG 농도 세 가지를 썼기 때문에 selected 열이 세 개 나옵니다.",
-      },
-    ],
     s3KeyTitle: "핵심은 이게 전부입니다",
     s3Key: (
       <p>
@@ -615,7 +731,7 @@ const COPY = {
     statDepth: "가장 깊은 샘플 대 얕은 샘플",
     statDepthHint: "총 read 수가 다름",
     s5RevealPrompt:
-      "담도록 설계된 library인데, variant가 왜 빠져 있을까요?",
+      "모든 variant를 담도록 설계한 library인데, 왜 어떤 variant는 한 번도 안 잡혔을까요?",
     s5RevealBody: (
       <>
         <p>

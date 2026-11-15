@@ -35,6 +35,39 @@ It is gzipped and otherwise unmodified. 191,157 rows, six columns:
 `data/raw/gb1_wt_counts.tsv` is `result/WTcount` from the same repository: the
 wild-type counts that every fitness value is normalised against.
 
+## The structures
+
+Two coordinate files are vendored so the four randomised sites can be shown in
+the fold rather than only named. Both come from the RCSB Protein Data Bank and
+are gzipped but otherwise unmodified.
+
+| File | PDB | What it is |
+|---|---|---|
+| `data/raw/1pga.pdb.gz` | [1PGA](https://doi.org/10.2210/pdb1pga/pdb) | GB1 itself: the B1 domain of streptococcal protein G, X-ray at 2.07 Å |
+| `data/raw/1fcc.pdb.gz` | [1FCC](https://doi.org/10.2210/pdb1fcc/pdb) | A protein G domain bound to the Fc of human IgG |
+
+> Gallagher T, Alexander P, Bryan P, Gilliland GL (1994). *Two crystal
+> structures of the B1 immunoglobulin-binding domain of streptococcal protein
+> G and comparison with NMR.* **Biochemistry** 33(15):4721–4729.
+
+> Sauer-Eriksson AE, Kleywegt GJ, Uhlén M, Jones TA (1995). *Crystal structure
+> of the C2 fragment of streptococcal protein G in complex with the Fc domain
+> of human IgG.* **Structure** 3(3):265–278.
+
+**1FCC contains the C2 domain, not B1.** C2 is a close homologue that binds Fc
+the same way, and no B1–Fc complex of comparable quality exists. It is used
+only to show what "binding to IgG" physically means; every number on the site
+comes from B1. The site states this caveat where the structure is shown.
+
+The pipeline reads both files, keeps the α-carbon trace and the secondary
+structure records, and writes `public/data/structure.json` (14 KB). It also
+**measures** the claim that the four sites are neighbours rather than asserting
+it: the CA distances come out at 3.8–8.1 Å, including 8.1 Å between V39 and
+V54, which are 15 residues apart in the sequence. The pipeline fails loudly if
+residues 39, 40, 41 and 54 of 1PGA do not read `VDGV`.
+
+PDB coordinate files are released into the public domain (CC0).
+
 ## Licence
 
 *eLife* publishes under **Creative Commons Attribution 4.0 (CC BY 4.0)**, which
