@@ -12,6 +12,19 @@ proteins should be, variants with four reads that look like miracle hits, and
 a quality cutoff that the original authors marked `#TUNABLE` in their own
 source code.
 
+## How it works
+
+Chapters are **step sequences**, not long scrolling pages: one idea per
+screen, a progress rail, and an explicit action to continue.
+
+Each chapter asks you to commit to something before it tells you the answer —
+a predicted number on a slider, or a graded multiple-choice decision where
+every option shows its real consequence in numbers rather than just
+correct/incorrect. **The answer reveal is where the code appears**, with tabs
+for what the field actually runs (Enrich2, DiMSum) and what you would write
+yourself (pandas). Tool options are quoted from those tools' own
+repositories, not from memory.
+
 ## What it covers
 
 Nine chapters, each built on the same real dataset:
@@ -104,7 +117,8 @@ src/lib/chapters.ts       chapter order and slugs (structure only)
 src/lib/i18n.ts           all UI strings and chapter titles, per language
 src/lib/palette.ts        validated chart colours
 src/components/charts/    hand-rolled SVG charts, no chart library
-src/content/chapters/     chapter bodies: <slug>.tsx and <slug>.ko.tsx
+src/components/learn/     Steps, Predict, Quiz, ToolCode
+src/content/chapters/     chapter bodies, one file per chapter, both languages
 src/content/registry.tsx  maps slug + language to a chapter body
 src/app/(en)/             English routes, at the site root
 src/app/(ko)/ko/          Korean routes, under /ko/
@@ -133,11 +147,12 @@ Korean copy keeps technical terms in English (fitness, read depth, stop codon,
 epistasis). That is how Korean bioinformatics material is normally written and
 it keeps the vocabulary transferable to papers and tools.
 
-**Translation status: 1 of 9 chapters.** Untranslated chapters fall back to
-English and say so in a notice at the top of the page, rather than 404ing or
-silently pretending to be translated. To translate one, add
-`src/content/chapters/<slug>.ko.tsx` and register it in
-`src/content/registry.tsx`.
+**All nine chapters exist in both languages.** Each chapter is a single
+component holding a `COPY` object keyed by language, so charts, step
+structure and every number are shared and only prose differs. The fallback
+machinery is still in place: registering a chapter with fewer languages makes
+the Korean site serve English with a notice rather than 404ing or silently
+pretending to be translated.
 
 `pipeline/build_data.py` is written to be read. It is commented as a teaching
 document and it is the authority on every number the site shows.

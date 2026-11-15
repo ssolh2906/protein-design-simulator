@@ -1,64 +1,96 @@
 import type { ComponentType, ReactNode } from "react";
 import type { Lang } from "@/lib/i18n";
 
-import { TheExperimentEn } from "./chapters/the-experiment";
-import { RawCountsEn } from "./chapters/raw-counts";
-import { QualityControlEn } from "./chapters/quality-control";
-import { QualityControlKo } from "./chapters/quality-control.ko";
-import { FitnessEn } from "./chapters/fitness";
-import { ReproducibilityEn } from "./chapters/reproducibility";
-import { AssayConditionsEn } from "./chapters/assay-conditions";
-import { LandscapeEn } from "./chapters/landscape";
-import { EpistasisEn } from "./chapters/epistasis";
-import { PickingHitsEn } from "./chapters/picking-hits";
+import { TheExperiment } from "./chapters/the-experiment";
+import { RawCounts } from "./chapters/raw-counts";
+import { QualityControl } from "./chapters/quality-control";
+import { Fitness } from "./chapters/fitness";
+import { Reproducibility } from "./chapters/reproducibility";
+import { AssayConditions } from "./chapters/assay-conditions";
+import { Landscape } from "./chapters/landscape";
+import { Epistasis } from "./chapters/epistasis";
+import { PickingHits } from "./chapters/picking-hits";
 
 /**
- * Chapter bodies, by slug and language.
+ * Props every chapter body receives.
  *
- * Prose is duplicated per language rather than pulled from a string
- * dictionary. The chapters are long-form writing with inline emphasis,
- * links and components such as <Variant seq="VDGV" />, none of which
- * survives being flattened into JSON. Charts, tables and every number stay
- * shared, so the two languages cannot disagree about the data.
- *
- * A missing language falls back to English, and the frame shows a notice.
+ * `takeaway` is a slot rather than something the chapter writes itself:
+ * stepped chapters place it on their final step, so it cannot print the
+ * punchline on screen one.
  */
-export type ChapterProps = { takeaway?: ReactNode };
+export type ChapterProps = {
+  lang: Lang;
+  takeaway?: ReactNode;
+};
+
+type Entry = {
+  Component: ComponentType<ChapterProps>;
+  /** Languages this chapter actually has copy for. */
+  langs: Lang[];
+  /** Renders one screen at a time and owns its own takeaway placement. */
+  stepped?: boolean;
+};
 
 /**
- * Stepped chapters render one screen at a time and place the takeaway on
- * their final step themselves. The frame must not also render it at the
- * bottom of the page, where it would give the answer away on step 1.
+ * Chapter bodies.
+ *
+ * One component per chapter, holding a COPY object keyed by language.
+ * Charts, tables, step structure and every number are shared; only the
+ * prose differs, so the two languages cannot disagree about the data.
+ *
+ * Prose is written as JSX inside that object rather than pulled from a
+ * string dictionary, because these are long-form chapters with inline
+ * emphasis, links and components such as <Variant seq="VDGV" />, none of
+ * which survives being flattened into JSON.
  */
-const STEPPED = new Set<string>(["reproducibility"]);
-
-export const isStepped = (slug: string) => STEPPED.has(slug);
-
-const CHAPTER_CONTENT: Record<
-  string,
-  Partial<Record<Lang, ComponentType<ChapterProps>>>
-> = {
-  "the-experiment": { en: TheExperimentEn },
-  "raw-counts": { en: RawCountsEn },
-  "quality-control": { en: QualityControlEn, ko: QualityControlKo },
-  fitness: { en: FitnessEn },
-  reproducibility: { en: ReproducibilityEn },
-  "assay-conditions": { en: AssayConditionsEn },
-  landscape: { en: LandscapeEn },
-  epistasis: { en: EpistasisEn },
-  "picking-hits": { en: PickingHitsEn },
+const CHAPTER_CONTENT: Record<string, Entry> = {
+  "the-experiment": {
+    Component: TheExperiment,
+    langs: ["en", "ko"],
+    stepped: true,
+  },
+  "raw-counts": { Component: RawCounts, langs: ["en", "ko"], stepped: true },
+  "quality-control": {
+    Component: QualityControl,
+    langs: ["en", "ko"],
+    stepped: true,
+  },
+  fitness: { Component: Fitness, langs: ["en", "ko"], stepped: true },
+  reproducibility: {
+    Component: Reproducibility,
+    langs: ["en", "ko"],
+    stepped: true,
+  },
+  "assay-conditions": {
+    Component: AssayConditions,
+    langs: ["en", "ko"],
+    stepped: true,
+  },
+  landscape: { Component: Landscape, langs: ["en", "ko"], stepped: true },
+  epistasis: { Component: Epistasis, langs: ["en", "ko"], stepped: true },
+  "picking-hits": {
+    Component: PickingHits,
+    langs: ["en", "ko"],
+    stepped: true,
+  },
 };
 
 export function getChapterContent(slug: string, lang: Lang) {
   const entry = CHAPTER_CONTENT[slug];
   if (!entry) throw new Error(`No content registered for chapter: ${slug}`);
-  const translated = entry[lang];
-  if (translated) return { Content: translated, isTranslated: true };
-  const fallback = entry.en;
-  if (!fallback) throw new Error(`No English fallback for chapter: ${slug}`);
-  return { Content: fallback, isTranslated: false };
+  const isTranslated = entry.langs.includes(lang);
+  return {
+    Content: entry.Component,
+    // Fall back to English copy, and let the frame say so.
+    contentLang: isTranslated ? lang : ("en" as Lang),
+    isTranslated,
+    stepped: entry.stepped === true,
+  };
 }
 
-/** Which chapters exist in a language, for a progress note in the UI. */
+export const isStepped = (slug: string) =>
+  CHAPTER_CONTENT[slug]?.stepped === true;
+
+/** How many chapters have copy in a language, for the progress note. */
 export const translatedCount = (lang: Lang) =>
-  Object.values(CHAPTER_CONTENT).filter((e) => e[lang]).length;
+  Object.values(CHAPTER_CONTENT).filter((e) => e.langs.includes(lang)).length;

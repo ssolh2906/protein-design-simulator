@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { chapterBySlug, neighbours } from "@/lib/chapters";
 import { CHAPTER_COPY, UI, href, type Lang } from "@/lib/i18n";
-import { getChapterContent, isStepped } from "@/content/registry";
+import { getChapterContent } from "@/content/registry";
 import { Takeaway } from "@/components/ui";
 
 /**
@@ -17,8 +17,8 @@ export function ChapterFrame({ slug, lang }: { slug: string; lang: Lang }) {
   const copy = CHAPTER_COPY[lang][slug];
   const ui = UI[lang];
   const { prev, next } = neighbours(slug);
-  const { Content, isTranslated } = getChapterContent(slug, lang);
-  const stepped = isStepped(slug);
+  const { Content, contentLang, isTranslated, stepped } =
+    getChapterContent(slug, lang);
   const takeaway = <Takeaway label={ui.takeaway}>{copy.takeaway}</Takeaway>;
 
   return (
@@ -56,7 +56,11 @@ export function ChapterFrame({ slug, lang }: { slug: string; lang: Lang }) {
         </div>
       )}
 
-      {stepped ? <Content takeaway={takeaway} /> : <Content />}
+      {stepped ? (
+        <Content lang={contentLang} takeaway={takeaway} />
+      ) : (
+        <Content lang={contentLang} />
+      )}
 
       {!stepped && takeaway}
 

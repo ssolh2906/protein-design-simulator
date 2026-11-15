@@ -7,10 +7,11 @@ import { L } from "./labels";
 /**
  * "실제로는 이렇게 씁니다" — the code payoff shown after an answer.
  *
- * Two kinds of tab, deliberately:
- *   - what you would write yourself (pandas), so the logic is visible
- *   - what the field actually runs (Enrich2, DiMSum), so the reader knows
- *     the tool name and the exact option that corresponds to this step
+ * Two kinds of tab, deliberately, and the real tool comes FIRST so it is
+ * what opens by default:
+ *   - what the field actually runs (Enrich2, DiMSum), so the reader leaves
+ *     knowing the tool name and the exact option for this step
+ *   - what you would write yourself (pandas), so the logic stays visible
  *
  * Only the lines that matter are shown. These are excerpts, not runnable
  * scripts, and the label says so.
