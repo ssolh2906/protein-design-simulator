@@ -12,12 +12,15 @@ import { Histogram } from "@/components/charts/Histogram";
 import { Steps, Step } from "@/components/learn/Steps";
 import { Quiz, Reveal } from "@/components/learn/Quiz";
 import { ToolCode } from "@/components/learn/ToolCode";
-import { getSingles, getLandscape, fmt } from "@/lib/data";
+import { getSingles, getLandscape, getStructures, fmt } from "@/lib/data";
+import { StructureSites } from "@/components/viz/StructureFigure";
+import { fitnessColor } from "@/lib/palette";
 import type { ChapterProps } from "@/content/registry";
 
 export function Landscape({ lang, takeaway }: ChapterProps) {
   const { singles, heatmap, aaOrder } = getSingles();
   const landscape = getLandscape();
+  const struct = getStructures();
   const t = COPY[lang];
 
   const best = singles.slice(0, 8);
@@ -28,7 +31,16 @@ export function Landscape({ lang, takeaway }: ChapterProps) {
     const measured = row.cells.filter((c) => !c.isWt && c.fitness !== null);
     const tolerated = measured.filter((c) => (c.fitness ?? 0) > 0.1).length;
     const better = measured.filter((c) => (c.fitness ?? 0) > 1).length;
+    // The median is the honest summary here: a single spectacular mutation
+    // would drag a mean upward and make a brittle position look workable.
+    const sorted = measured
+      .map((c) => c.fitness ?? 0)
+      .sort((x, y) => x - y);
+    const median = sorted.length
+      ? sorted[Math.floor((sorted.length - 1) / 2)]
+      : 0;
     return {
+      median,
       position: row.position,
       wt: row.wt,
       measured: measured.length,
@@ -37,6 +49,13 @@ export function Landscape({ lang, takeaway }: ChapterProps) {
       pct: Math.round((100 * tolerated) / Math.max(measured.length, 1)),
     };
   });
+
+  // Ranked by the same median the colour uses, so the caption cannot claim
+  // something the picture contradicts.
+  const byMedian = [...byPosition].sort((x, y) => x.median - y.median);
+  const leastTolerant = byMedian[0];
+  const mostTolerant = byMedian[byMedian.length - 1];
+  const name = (p: { wt: string; position: number }) => `${p.wt}${p.position}`;
 
   const g41 = byPosition.find((p) => p.position === 41)!;
   const d40 = byPosition.find((p) => p.position === 40)!;
@@ -75,6 +94,25 @@ export function Landscape({ lang, takeaway }: ChapterProps) {
             question={t.s2Question}
             choices={t.s2Choices}
           >
+            <Figure
+              title={t.figSiteMapTitle}
+              subtitle={t.figSiteMapSub}
+              caption={t.figSiteMapCaption(name(leastTolerant), name(mostTolerant))}
+              source={`${struct.gb1.pdb} · RCSB PDB`}
+            >
+              <StructureSites
+                model={struct.gb1}
+                sites={byPosition.map((p) => ({
+                  resi: p.position,
+                  aa: p.wt,
+                  // Same diverging scale as the heatmap above, so a colour
+                  // means the same thing in both figures.
+                  color: fitnessColor(Math.log10(Math.max(p.median, 1e-3))),
+                }))}
+                labels={t.siteMapLabels}
+              />
+            </Figure>
+
             <Figure title={t.figTolTitle} subtitle={t.figTolSub}>
               <DataTable
                 caption={t.figTolTitle}
@@ -380,6 +418,25 @@ const COPY = {
   en: {
     labels: ["The heatmap", "Where to work", "Singles", "The shape"],
 
+    figSiteMapTitle: "The same four positions, coloured by what they tolerate",
+    figSiteMapSub: "Median fitness of the 19 single mutants at each position",
+    figSiteMapCaption: (worst: string, best: string) => (
+      <>
+        Same colour scale as the heatmap in step 1: red is dead, pale is
+        middling, blue is better than wild type.{" "}
+        <strong>{worst}</strong> is the position that tolerates least, and{" "}
+        <strong>{best}</strong> the most. Tolerance is not a property of the
+        amino acid on its own: it is a property of where that side chain sits
+        and what it is packed against, which is why it is worth seeing in the
+        fold rather than only in a table.
+      </>
+    ),
+    siteMapLabels: {
+      hint: "Drag to turn it.",
+      aria: "The GB1 backbone with the four randomised positions marked and coloured by the median fitness of their single mutants.",
+    },
+
+
     s1Title: "Start with single mutants",
     s1Body: (
       <>
@@ -547,6 +604,24 @@ const COPY = {
 
   ko: {
     labels: ["heatmap", "어디를 건드릴까", "single", "분포"],
+
+    figSiteMapTitle: "같은 네 자리를, 얼마나 견디는지로 색칠하면",
+    figSiteMapSub: "각 자리의 single mutant 19개의 median fitness",
+    figSiteMapCaption: (worst: string, best: string) => (
+      <>
+        1단계 heatmap과 같은 색 스케일입니다. 빨강은 죽음, 옅은 색은 중간,
+        파랑은 wild type보다 낫다는 뜻입니다. 가장 못 견디는 자리가{" "}
+        <strong>{worst}</strong>, 가장 잘 견디는 자리가{" "}
+        <strong>{best}</strong>입니다. 견디는 정도는 amino acid 자체의 성질이
+        아닙니다. 그 side chain이 어디에 놓여 있고 무엇과 맞닿아 있는지의
+        문제입니다. 표로만 보지 않고 접힌 구조에서 볼 가치가 여기에 있습니다.
+      </>
+    ),
+    siteMapLabels: {
+      hint: "끌어서 돌려보세요.",
+      aria: "GB1 backbone에 무작위화된 네 자리가 표시되고, 각 자리의 single mutant median fitness로 색칠된 모습.",
+    },
+
 
     s1Title: "single mutant부터 봅니다",
     s1Body: (

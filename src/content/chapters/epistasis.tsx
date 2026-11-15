@@ -12,7 +12,8 @@ import { ScatterPlot } from "@/components/charts/ScatterPlot";
 import { Steps, Step } from "@/components/learn/Steps";
 import { Predict, Quiz } from "@/components/learn/Quiz";
 import { ToolCode } from "@/components/learn/ToolCode";
-import { getEpistasis, getSingles, fmt } from "@/lib/data";
+import { getEpistasis, getSingles, getStructures, fmt } from "@/lib/data";
+import { StructureSites } from "@/components/viz/StructureFigure";
 import type { ChapterProps } from "@/content/registry";
 
 export function Epistasis({ lang, takeaway }: ChapterProps) {
@@ -26,6 +27,18 @@ export function Epistasis({ lang, takeaway }: ChapterProps) {
   const a = byLabel.get(labelA);
   const b = byLabel.get(labelB);
   const deadCount = epi.negative.filter((p) => p.observed === 0).length;
+
+  // "V39W" -> 39. The pair in the example is two of the four randomised
+  // positions, so both are in the structure the pipeline already emits.
+  const struct = getStructures();
+  const posOf = (label: string) => Number(label.replace(/\D/g, ""));
+  const pa = posOf(labelA);
+  const pb = posOf(labelB);
+  const gap = struct.gb1.sitePairs?.find(
+    (x) => (x.a === pa && x.b === pb) || (x.a === pb && x.b === pa),
+  );
+  const siteOf = (pos: number) =>
+    struct.gb1.sites?.find((x) => x.resi === pos);
 
   return (
     <Steps
@@ -115,6 +128,27 @@ export function Epistasis({ lang, takeaway }: ChapterProps) {
                 </span>
               </div>
             </div>
+
+            <Figure
+              title={t.figPairTitle(labelA, labelB)}
+              subtitle={t.figPairSub}
+              caption={t.figPairCaption(labelA, labelB, gap?.ca ?? 0)}
+              source={`${struct.gb1.pdb} · RCSB PDB`}
+            >
+              <StructureSites
+                model={struct.gb1}
+                sites={[pa, pb].map((pos, i) => ({
+                  resi: pos,
+                  aa: siteOf(pos)?.aa ?? "",
+                  // Two colours, because the pair projects almost on top of
+                  // itself at some angles -- which is the point, but it
+                  // should still be legible as two residues.
+                  color: i === 0 ? "--series-2" : "--series-3",
+                }))}
+                links={[{ a: pa, b: pb, label: `${gap?.ca ?? 0} Å` }]}
+                labels={t.pairLabels}
+              />
+            </Figure>
 
             <Callout kind="key" title={t.s2KeyTitle}>
               {t.s2Key(labelA, labelB, star.input)}
@@ -337,6 +371,23 @@ const COPY = {
   en: {
     labels: ["The null model", "Two dead mutations", "Why greedy fails", "How common", "Both directions"],
 
+    figPairTitle: (a: string, b: string) => `Where ${a} and ${b} actually are`,
+    figPairSub: "The two positions of the pair, in the folded protein",
+    figPairCaption: (a: string, b: string, d: number) => (
+      <>
+        Their alpha carbons are <strong>{d} Å</strong> apart. At that range
+        the two side chains are not independent parts that happen to be in
+        the same protein — they are touching. The multiplication in the null
+        model assumes {a} and {b} never meet, and the structure shows exactly
+        why that assumption had no chance here.
+      </>
+    ),
+    pairLabels: {
+      hint: "Drag to turn it.",
+      aria: "The GB1 backbone with the two positions of the epistatic pair marked and the distance between them drawn as a dashed line.",
+    },
+
+
     s1Title: "The simplest guess about combining mutations",
     s1Body: (
       <>
@@ -520,6 +571,23 @@ const COPY = {
 
   ko: {
     labels: ["기준 모델", "죽은 mutation 둘", "greedy가 막히는 이유", "얼마나 흔한가", "양방향"],
+
+    figPairTitle: (a: string, b: string) => `${a}와 ${b}가 실제로 있는 자리`,
+    figPairSub: "이 pair의 두 자리를 접힌 단백질에서 보면",
+    figPairCaption: (a: string, b: string, d: number) => (
+      <>
+        두 alpha carbon 사이는 <strong>{d} Å</strong>입니다. 이 거리면 두 side
+        chain은 우연히 같은 단백질에 들어 있는 별개의 부품이 아닙니다. 서로
+        닿아 있습니다. 기준 모델의 곱셈은 {a}와 {b}가 서로 만나지 않는다고
+        가정하는데, 그 가정이 왜 애초에 성립할 수 없었는지를 구조가 그대로
+        보여줍니다.
+      </>
+    ),
+    pairLabels: {
+      hint: "끌어서 돌려보세요.",
+      aria: "GB1 backbone에 epistasis pair의 두 자리가 표시되고, 둘 사이 거리가 점선으로 그려진 모습.",
+    },
+
 
     s1Title: "mutation을 합칠 때의 가장 단순한 가정",
     s1Body: (
