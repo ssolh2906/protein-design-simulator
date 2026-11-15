@@ -257,25 +257,26 @@ const COPY = {
 
 
     figFoldTitle: "GB1, and what it binds",
-    figFoldSub: "Four beta strands packed against one helix",
+    figFoldSub: "GB1 itself, and its sibling domain C2 caught holding an antibody",
     figFoldCaption: (
       <>
         Binding is a physical contact, and that contact is the only thing this
-        experiment measures. To see it, the second view borrows C2 — GB1&rsquo;s
-        sibling domain in the same protein, caught in the act of holding an
-        antibody. The two differ at 3 of 56 positions, none of them near the
-        four this walkthrough is about.
+        experiment measures. Every <em>number</em> on this site comes from B1.
       </>
     ),
     structLabels: {
-      alone: "GB1 alone",
-      bound: "Bound to IgG",
+      alone: "GB1",
+      bound: "C2, bound to IgG",
+      noteAlone:
+        "GB1 (PDB 1PGA). Four beta strands packed against one helix.",
+      noteBound:
+        "Not GB1: this is C2 (PDB 1FCC), the sibling domain next door in the same protein. There is no B1 structure bound to an antibody, and C2 differs at 3 of 56 positions, none of them near the four sites.",
       hint: "Drag to turn it.",
       ariaAlone:
         "A slowly rotating backbone of the GB1 fold: a four-stranded beta sheet packed against a single alpha helix.",
       ariaBound:
         "A slowly rotating backbone of a protein G domain, in blue, docked against the two grey chains of an antibody Fc region.",
-      legendDomain: "protein G domain",
+      legendDomain: "C2 domain",
       legendIgg: "IgG Fc",
     },
 
@@ -507,24 +508,26 @@ const COPY = {
 
 
     figFoldTitle: "GB1, 그리고 무엇에 붙는지",
-    figFoldSub: "beta strand 네 개가 helix 하나에 붙어 있습니다",
+    figFoldSub: "GB1 본체, 그리고 형제 domain C2가 항체를 붙잡고 있는 구조",
     figFoldCaption: (
       <>
-        결합은 물리적인 접촉이고, 이 실험이 재는 건 그 접촉 하나뿐입니다. 그걸
-        보려고 두 번째 화면에서는 GB1의 형제 domain인 C2의 구조를 살펴봅니다.
-        같은 protein G 안에 있는 거의 같은 부품이고, 56자리 중 3자리만
-        다릅니다. 그 셋은 우리가 볼 네 자리 근처에 없습니다.
+        결합은 물리적인 접촉이고, 이 실험이 재는 건 그 접촉 하나뿐입니다. 이
+        사이트의 모든 <em>숫자</em>는 B1에서 나옵니다.
       </>
     ),
     structLabels: {
-      alone: "GB1 혼자",
-      bound: "IgG에 붙은 모습",
+      alone: "GB1",
+      bound: "C2가 IgG에 붙은 모습",
+      noteAlone:
+        "GB1 (PDB 1PGA). beta strand 네 개가 helix 하나에 붙어 있습니다.",
+      noteBound:
+        "GB1이 아닙니다. 같은 단백질 안 옆자리 형제 domain인 C2 (PDB 1FCC)입니다. B1이 항체에 붙은 구조가 없어서 이걸 씁니다. C2는 56자리 중 3자리만 다르고, 그 셋은 네 자리 근처에 없습니다.",
       hint: "끌어서 돌려보세요.",
       ariaAlone:
         "천천히 회전하는 GB1 backbone. beta strand 네 가닥으로 된 sheet가 alpha helix 하나에 붙어 있습니다.",
       ariaBound:
         "천천히 회전하는 구조. 파란색 protein G domain이 회색 항체 Fc region 두 가닥에 붙어 있습니다.",
-      legendDomain: "protein G domain",
+      legendDomain: "C2 domain",
       legendIgg: "IgG Fc",
     },
 

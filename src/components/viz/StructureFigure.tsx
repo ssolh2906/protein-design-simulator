@@ -36,6 +36,15 @@ export function StructureSwitch({
     ariaBound: string;
     legendDomain: string;
     legendIgg: string;
+    /**
+     * What is on screen right now, said before the reader looks at it.
+     *
+     * The bound view is not GB1 but its sibling domain, and a caption at the
+     * foot of the figure is read too late: by then the reader has already
+     * decided they were looking at GB1.
+     */
+    noteAlone: string;
+    noteBound: string;
   };
   height?: number;
 }) {
@@ -64,6 +73,13 @@ export function StructureSwitch({
           </button>
         ))}
       </div>
+
+      <p
+        aria-live="polite"
+        className="mb-3 text-[12.5px] leading-5 text-[var(--ink-secondary)]"
+      >
+        {showBound ? labels.noteBound : labels.noteAlone}
+      </p>
 
       <div className="mx-auto w-full max-w-[420px]">
       <StructureViewer
