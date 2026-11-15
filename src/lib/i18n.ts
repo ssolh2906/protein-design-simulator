@@ -106,7 +106,7 @@ export const CHAPTER_COPY: Record<Lang, Record<string, ChapterCopy>> = {
       summary:
         "What GB1 is, what was measured, and why four positions give 160,000 variants.",
       takeaway:
-        "You cannot analyse a screen you do not understand. Read the assay first.",
+        "An assay you have not read is an assay you cannot analyse. This one measured exactly one thing: how well a variant binds IgG.",
     },
     "raw-counts": {
       title: "The raw counts",
@@ -171,7 +171,7 @@ export const CHAPTER_COPY: Record<Lang, Record<string, ChapterCopy>> = {
       summary:
         "GB1이 무엇이고, 무엇을 측정했고, 왜 네 자리가 160,000개 variant가 되는지.",
       takeaway:
-        "이해하지 못한 screen은 분석할 수 없습니다. assay를 먼저 읽으세요.",
+        "읽어보지 않은 assay는 분석할 수 없습니다. 이 실험이 잰 것은 딱 하나, variant가 IgG에 얼마나 잘 붙느냐입니다.",
     },
     "raw-counts": {
       title: "raw count 열어보기",

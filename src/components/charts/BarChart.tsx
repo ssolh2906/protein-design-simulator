@@ -26,6 +26,7 @@ export function BarChart({
   height = 26,
   gap = 10,
   labelWidth = 92,
+  valueGutter = 52,
   showAxis = true,
 }: {
   bars: Bar[];
@@ -34,25 +35,33 @@ export function BarChart({
   height?: number;
   gap?: number;
   labelWidth?: number;
+  /**
+   * Room reserved at the right for the value label.
+   *
+   * The label is positioned at the end of the bar, so a bar at 100% of the
+   * domain would start its label at the right edge of the plot and run off
+   * the container. Reserving the space keeps the bars and the axis ticks on
+   * the same inner width instead of letting the longest bar decide.
+   */
+  valueGutter?: number;
   showAxis?: boolean;
 }) {
-  const [hover, setHover] = useState<{ i: number; x: number; y: number } | null>(
-    null,
-  );
+  const [hover, setHover] = useState<{
+    i: number;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const domainMax = max ?? Math.max(...bars.map((b) => b.value)) * 1.08;
   const ticks = niceTicks(0, domainMax, 4);
   const plotWidth = 100; // percent-based so the chart is fully fluid
 
   return (
-    <div
-      className="relative"
-      onMouseLeave={() => setHover(null)}
-    >
+    <div className="relative" onMouseLeave={() => setHover(null)}>
       {showAxis && (
         <div
           className="relative mb-1.5 h-4"
-          style={{ marginLeft: labelWidth }}
+          style={{ marginLeft: labelWidth, marginRight: valueGutter }}
           aria-hidden
         >
           {ticks.map((t) => (
@@ -78,48 +87,50 @@ export function BarChart({
               {b.label}
             </div>
 
-            <div
-              className="relative flex-1"
-              style={{ height }}
-              onMouseMove={(e) => {
-                const r = e.currentTarget
-                  .closest(".relative")
-                  ?.getBoundingClientRect();
-                setHover({
-                  i,
-                  x: e.clientX - (r?.left ?? 0),
-                  y: e.clientY - (r?.top ?? 0),
-                });
-              }}
-            >
-              {/* recessive gridlines behind the bar */}
-              {showAxis &&
-                ticks.map((t) => (
-                  <span
-                    key={t}
-                    className="absolute top-0 bottom-0 w-px bg-[var(--grid)]"
-                    style={{ left: `${(t / domainMax) * plotWidth}%` }}
-                    aria-hidden
-                  />
-                ))}
-
+            <div className="flex-1" style={{ paddingRight: valueGutter }}>
               <div
-                className="absolute top-0 bottom-0 left-0 rounded-r-[4px] transition-[width] duration-300"
-                style={{
-                  width: `${Math.max((b.value / domainMax) * plotWidth, 0.4)}%`,
-                  background: b.color ?? "var(--series-1)",
-                  opacity: hover && hover.i !== i ? 0.45 : 1,
-                }}
-              />
-
-              <span
-                className="tabular absolute top-1/2 -translate-y-1/2 pl-2 text-[12px] font-medium text-[var(--ink)]"
-                style={{
-                  left: `${Math.max((b.value / domainMax) * plotWidth, 0.4)}%`,
+                className="relative"
+                style={{ height }}
+                onMouseMove={(e) => {
+                  const r = e.currentTarget
+                    .closest(".relative")
+                    ?.getBoundingClientRect();
+                  setHover({
+                    i,
+                    x: e.clientX - (r?.left ?? 0),
+                    y: e.clientY - (r?.top ?? 0),
+                  });
                 }}
               >
-                {b.valueLabel ?? `${b.value}${unit}`}
-              </span>
+                {/* recessive gridlines behind the bar */}
+                {showAxis &&
+                  ticks.map((t) => (
+                    <span
+                      key={t}
+                      className="absolute top-0 bottom-0 w-px bg-[var(--grid)]"
+                      style={{ left: `${(t / domainMax) * plotWidth}%` }}
+                      aria-hidden
+                    />
+                  ))}
+
+                <div
+                  className="absolute top-0 bottom-0 left-0 rounded-r-[4px] transition-[width] duration-300"
+                  style={{
+                    width: `${Math.max((b.value / domainMax) * plotWidth, 0.4)}%`,
+                    background: b.color ?? "var(--series-1)",
+                    opacity: hover && hover.i !== i ? 0.45 : 1,
+                  }}
+                />
+
+                <span
+                  className="tabular absolute top-1/2 -translate-y-1/2 pl-2 text-[12px] font-medium text-[var(--ink)]"
+                  style={{
+                    left: `${Math.max((b.value / domainMax) * plotWidth, 0.4)}%`,
+                  }}
+                >
+                  {b.valueLabel ?? `${b.value}${unit}`}
+                </span>
+              </div>
             </div>
           </div>
         ))}

@@ -181,7 +181,33 @@ export type Meta = {
     repo: string;
     licence: string;
   };
+  structures: { pdb: string; title: string; doi: string }[];
 };
+
+export type StructureChain = {
+  id: string;
+  /** "gb1", "igg" or "domain" -- drives the colour in the viewer. */
+  role: string;
+  resi: number[];
+  seq: string;
+  /** One character per residue: H helix, E strand, C coil. */
+  ss: string;
+  ca: [number, number, number][];
+};
+
+export type StructureModel = {
+  pdb: string;
+  title: string;
+  method: string;
+  resolution: number | null;
+  /** Distance from the centre to the furthest atom, for camera framing. */
+  extent: number;
+  chains: StructureChain[];
+  sites?: { resi: number; aa: string; ss: string }[];
+  sitePairs?: { a: number; b: number; ca: number; apart: number }[];
+};
+
+export type Structures = { gb1: StructureModel; complex: StructureModel };
 
 // --- loaders ------------------------------------------------------------
 
@@ -201,6 +227,7 @@ export const getLandscape = () => read<Landscape>("landscape.json");
 export const getWinnersCurse = () => read<WinnersCurse>("winners-curse.json");
 export const getConditions = () => read<Conditions>("conditions.json");
 export const getMeta = () => read<Meta>("meta.json");
+export const getStructures = () => read<Structures>("structure.json");
 
 // --- formatting helpers -------------------------------------------------
 

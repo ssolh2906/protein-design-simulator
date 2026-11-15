@@ -25,6 +25,14 @@ for what the field actually runs (Enrich2, DiMSum) and what you would write
 yourself (pandas). Tool options are quoted from those tools' own
 repositories, not from memory.
 
+Where a picture explains it faster than a paragraph, there is one: the GB1
+fold turns on the screen with the four randomised sites marked, you can switch
+it to the same domain docked against an antibody to see what "binding" means,
+and the pooled selection plays as a four-station animation you can step
+through. All of it is hand-rolled canvas and SVG — no 3D engine, no chart
+library — and all of it holds still if you asked your system for reduced
+motion.
+
 ## What it covers
 
 Nine chapters, each built on the same real dataset:
@@ -54,7 +62,15 @@ variants, and selected the library for binding to IgG by mRNA display.
 Read counts come from the authors' own analysis repository,
 [wchnicholas/ProteinGFourMutants](https://github.com/wchnicholas/ProteinGFourMutants)
 (`result/Mutcount`), and are vendored here at `data/raw/gb1_counts.tsv.gz`
-(1.4 MB). See [DATA_SOURCES.md](DATA_SOURCES.md).
+(1.4 MB).
+
+Two structures are vendored alongside them, from the RCSB PDB: **1PGA** (GB1
+itself) and **1FCC** (a protein G domain bound to an IgG Fc). The pipeline
+measures from 1PGA rather than asserting: the four randomised sites come out
+**3.8–8.1 Å** apart, including 8.1 Å between V39 and V54, which are 15
+residues apart in the sequence. 1FCC holds the C2 domain, not B1 — a caveat
+the site states where the structure is shown. See
+[DATA_SOURCES.md](DATA_SOURCES.md).
 
 ### It reproduces the paper
 
@@ -117,6 +133,7 @@ src/lib/chapters.ts       chapter order and slugs (structure only)
 src/lib/i18n.ts           all UI strings and chapter titles, per language
 src/lib/palette.ts        validated chart colours
 src/components/charts/    hand-rolled SVG charts, no chart library
+src/components/viz/       structure viewer and animations, canvas and SVG
 src/components/learn/     Steps, Predict, Quiz, ToolCode
 src/content/chapters/     chapter bodies, one file per chapter, both languages
 src/content/registry.tsx  maps slug + language to a chapter body
