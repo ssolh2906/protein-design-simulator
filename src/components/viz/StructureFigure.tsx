@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { StructureViewer, type Site } from "./StructureViewer";
+import { StructureViewer, type Site, type Link } from "./StructureViewer";
 import type { StructureModel } from "@/lib/data";
 
 /**
@@ -303,6 +303,46 @@ function SequenceRuler({
         <Swatch color="var(--depth-2)" text={labels.strand} />
         <Swatch color="var(--grid)" text={labels.loop} />
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------- marked sites, no ruler */
+
+/**
+ * The fold with specific residues called out, for the later chapters.
+ *
+ * Chapter 7 uses it to colour the four positions by how much mutation each
+ * one tolerates; chapter 8 uses it to put a measured distance between the
+ * two residues of an epistatic pair. In both cases the job is the same: give
+ * a number from the count table somewhere physical to live.
+ */
+export function StructureSites({
+  model,
+  sites,
+  links,
+  labels,
+  height = 300,
+}: {
+  model: StructureModel;
+  sites: Site[];
+  links?: Link[];
+  labels: { hint: string; aria: string };
+  height?: number;
+}) {
+  return (
+    <div>
+      <div className="mx-auto w-full max-w-[420px]">
+        <StructureViewer
+          model={model}
+          sites={sites}
+          links={links}
+          height={height}
+          roleColors={{ gb1: "--series-1", site: "--series-2" }}
+          label={labels.aria}
+        />
+      </div>
+      <p className={HINT_STYLE}>{labels.hint}</p>
     </div>
   );
 }

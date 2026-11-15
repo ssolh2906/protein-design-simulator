@@ -54,10 +54,13 @@ are gzipped but otherwise unmodified.
 > of the C2 fragment of streptococcal protein G in complex with the Fc domain
 > of human IgG.* **Structure** 3(3):265–278.
 
-**1FCC contains the C2 domain, not B1.** C2 is a close homologue that binds Fc
-the same way, and no B1–Fc complex of comparable quality exists. It is used
-only to show what "binding to IgG" physically means; every number on the site
-comes from B1. The site states this caveat where the structure is shown.
+**1FCC contains the C2 domain, not B1.** Protein G carries several
+near-identical IgG-binding domains; the library was built from B1, and no
+B1–Fc complex of comparable quality exists. Comparing the two chains as
+deposited, they are **identical at 53 of 56 positions** — the three
+differences are M1T, I6V and L7I, all at the far end of the domain from the
+randomised sites, which read `VDGV` in both. 1FCC is used only to show what
+"binding to IgG" physically means; every number on the site comes from B1. The site states this caveat where the structure is shown.
 
 The pipeline reads both files, keeps the α-carbon trace and the secondary
 structure records, and writes `public/data/structure.json` (14 KB). It also

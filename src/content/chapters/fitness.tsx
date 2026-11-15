@@ -13,6 +13,7 @@ import { Histogram } from "@/components/charts/Histogram";
 import { Steps, Step } from "@/components/learn/Steps";
 import { Predict, Quiz } from "@/components/learn/Quiz";
 import { ToolCode } from "@/components/learn/ToolCode";
+import { RatioOfRatios } from "@/components/viz/RatioOfRatios";
 import { getLandscape, fmt } from "@/lib/data";
 import type { ChapterProps } from "@/content/registry";
 
@@ -86,55 +87,31 @@ export function Fitness({ lang, takeaway }: ChapterProps) {
             subtitle={t.figWorkedSub}
             caption={t.figWorkedCaption(ex.ratioBefore, ex.ratioAfter)}
           >
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {[
-                  { l: `${ex.mut} input`, v: fmt(c.variantInput) },
-                  { l: `${ex.mut} selected`, v: fmt(c.variantSelected) },
-                  { l: t.wtInput, v: fmt(c.wtInput) },
-                  { l: t.wtSelected, v: fmt(c.wtSelected) },
-                ].map((x) => (
-                  <div
-                    key={x.l}
-                    className="rounded-lg border border-[var(--border)] bg-[var(--page)] px-3 py-2.5"
-                  >
-                    <div className="tabular text-[17px] font-semibold text-[var(--ink)]">
-                      {x.v}
-                    </div>
-                    <div className="mt-0.5 text-[11px] text-[var(--ink-muted)]">
-                      {x.l}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-2.5 font-mono text-[13px] leading-6">
-                <Row
-                  label={t.rowBefore}
-                  math={`${fmt(c.variantInput)} / ${fmt(c.wtInput)}`}
-                  result={ex.ratioBefore.toFixed(6)}
-                  color="var(--series-2)"
-                />
-                <Row
-                  label={t.rowAfter}
-                  math={`${fmt(c.variantSelected)} / ${fmt(c.wtSelected)}`}
-                  result={ex.ratioAfter.toFixed(6)}
-                  color="var(--series-1)"
-                />
-                <Row
-                  label={t.rowFitness}
-                  math={`${ex.ratioAfter.toFixed(6)} / ${ex.ratioBefore.toFixed(6)}`}
-                  result={ex.fitness.toFixed(4)}
-                  color="var(--ink)"
-                  emphasis
-                />
-              </div>
-
-              <p className="text-[13px] leading-6 text-[var(--ink-secondary)]">
-                {t.workedConclusion(ex.mut, ex.fitness)}
-              </p>
-            </div>
+            <RatioOfRatios
+              variant={{
+                name: ex.mut,
+                before: c.variantInput,
+                after: c.variantSelected,
+                grow: c.variantSelected / c.variantInput,
+              }}
+              wt={{
+                name: "VDGV",
+                before: c.wtInput,
+                after: c.wtSelected,
+                grow: c.wtSelected / c.wtInput,
+              }}
+              fitness={ex.fitness}
+              stations={t.ratioStations}
+              captions={t.ratioCaptions(ex.mut)}
+              label={t.ratioAria(ex.mut)}
+              text={{
+                ...t.ratioText,
+                alt: `${ex.ratioAfter.toFixed(6)} / ${ex.ratioBefore.toFixed(6)} = ${ex.fitness.toFixed(4)}`,
+              }}
+            />
           </Figure>
+
+          <Prose>{t.workedConclusion(ex.mut, ex.fitness)}</Prose>
 
           <ToolCode
             lang={lang}
@@ -276,49 +253,31 @@ df["fitness"] = (
   );
 }
 
-function Row({
-  label,
-  math,
-  result,
-  color,
-  emphasis = false,
-}: {
-  label: string;
-  math: string;
-  result: string;
-  color: string;
-  emphasis?: boolean;
-}) {
-  return (
-    <div
-      className={`flex flex-wrap items-baseline gap-x-3 rounded-lg px-3 py-2 ${
-        emphasis
-          ? "border border-[var(--border-strong)] bg-[var(--page)]"
-          : "bg-[var(--page)]"
-      }`}
-    >
-      <span className="w-full font-sans text-[11px] tracking-wide text-[var(--ink-muted)] uppercase sm:w-44">
-        {label}
-      </span>
-      <span className="tabular text-[var(--ink-secondary)]">{math}</span>
-      <span className="text-[var(--ink-muted)]" aria-hidden>
-        =
-      </span>
-      <span
-        className={`tabular ml-auto ${emphasis ? "text-[15px] font-semibold" : "font-medium"}`}
-        style={{ color }}
-      >
-        {result}
-      </span>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ copy */
 
 const COPY = {
   en: {
     labels: ["The idea", "Worked example", "Two zeros", "Does it work?", "The shape"],
+
+    ratioStations: ["The reads", "How much it grew", "Who grew more", "Fitness"],
+    ratioCaptions: (mut: string) => [
+      `${mut} went from 2,187 reads to 4,779. It more than doubled. Does that mean it binds well?`,
+      "The wild type grew too. Selection enriches everything that survives, so growing is not the test.",
+      "The wild type grew more: 3.65 times against 2.19. Measured against the reference, the variant lost ground.",
+      "So fitness lands below 1. The variant more than doubled its reads and is still the worse binder. That is the whole reason fitness is a ratio of ratios.",
+    ],
+    ratioAria: (mut: string) =>
+      `A four-step comparison showing that ${mut} grew 2.19 times during selection while the wild type grew 3.65 times, giving a fitness below 1.`,
+    ratioText: {
+      reads: "Reads, before and after",
+      growth: "Growth",
+      times: "x",
+      result: "Below 1 means the wild type outgrew it. Above 1 would mean the opposite.",
+      worse: "worse than wild type",
+      better: "better than wild type",
+    },
+
 
     s1Title: "Turning two counts into one number",
     s1Body: (
@@ -361,11 +320,6 @@ const COPY = {
         fitness is below 1.
       </>
     ),
-    wtInput: "wild type input",
-    wtSelected: "wild type selected",
-    rowBefore: "share before selection",
-    rowAfter: "share after selection",
-    rowFitness: "fitness",
     workedConclusion: (mut: string, f: number) => (
       <>
         A fitness of {f.toFixed(2)} means {mut} bound IgG roughly{" "}
@@ -490,6 +444,25 @@ const COPY = {
   ko: {
     labels: ["개념", "예제 계산", "두 개의 0", "작동하나?", "분포"],
 
+    ratioStations: ["읽은 수", "얼마나 늘었나", "누가 더 늘었나", "fitness"],
+    ratioCaptions: (mut: string) => [
+      `${mut}의 read가 2,187개에서 4,779개로 늘었습니다. 두 배가 넘습니다. 그럼 잘 붙는 걸까요?`,
+      "wild type도 같이 늘었습니다. selection은 살아남은 것을 전부 늘리기 때문에, 늘었다는 사실 자체는 시험이 되지 않습니다.",
+      "wild type이 더 많이 늘었습니다. 3.65배 대 2.19배. 기준과 견주면 이 variant는 자리를 잃은 것입니다.",
+      "그래서 fitness가 1보다 작게 나옵니다. read는 두 배 넘게 늘었는데도 wild type보다 못한 binder입니다. fitness를 비율의 비율로 두는 이유가 이것입니다.",
+    ],
+    ratioAria: (mut: string) =>
+      `네 단계 비교. selection 동안 ${mut}는 2.19배 늘었고 wild type은 3.65배 늘어서, fitness가 1보다 작게 나옵니다.`,
+    ratioText: {
+      reads: "read, 전후",
+      growth: "증가 배수",
+      times: "배",
+      result: "1보다 작으면 wild type이 더 많이 늘었다는 뜻입니다. 1보다 크면 그 반대입니다.",
+      worse: "wild type보다 나쁨",
+      better: "wild type보다 좋음",
+    },
+
+
     s1Title: "count 두 개를 숫자 하나로",
     s1Body: (
       <>
@@ -530,11 +503,6 @@ const COPY = {
         fitness가 1보다 작습니다.
       </>
     ),
-    wtInput: "wild type input",
-    wtSelected: "wild type selected",
-    rowBefore: "selection 전 비중",
-    rowAfter: "selection 후 비중",
-    rowFitness: "fitness",
     workedConclusion: (mut: string, f: number) => (
       <>
         fitness {f.toFixed(2)}는, 이 조건에서 {mut}가 원래 단백질의 약{" "}

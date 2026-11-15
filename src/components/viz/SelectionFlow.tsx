@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { usePhases, PhaseButtons, PhaseCaption } from "./phases";
 
 /**
  * The selection, as a picture.
@@ -29,8 +29,6 @@ const JITTER = Array.from({ length: COUNT }, (_, i) => {
   return [(h - Math.floor(h) - 0.5) * 16, (g - Math.floor(g) - 0.5) * 14];
 });
 
-type Phase = 0 | 1 | 2 | 3;
-
 export function SelectionFlow({
   stations,
   label,
@@ -46,34 +44,7 @@ export function SelectionFlow({
   /** Labels for the two count badges. */
   readout: { before: string; after: string; binds: string; washed: string };
 }) {
-  const [phase, setPhase] = useState<Phase>(0);
-  const [reduced, setReduced] = useState(false);
-  const [running, setRunning] = useState(true);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    const m = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduced(m.matches);
-    sync();
-    m.addEventListener("change", sync);
-    return () => m.removeEventListener("change", sync);
-  }, []);
-
-  useEffect(() => {
-    if (reduced || !running) return;
-    timer.current = setInterval(
-      () => setPhase((p) => ((p + 1) % 4) as Phase),
-      2200,
-    );
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
-  }, [reduced, running]);
-
-  const pick = (p: Phase) => {
-    setRunning(false); // a click means the reader is driving now
-    setPhase(p);
-  };
+  const { phase, pick } = usePhases(4);
 
   const W = 340;
   const gridX = (i: number) => 92 + (i % COLS) * 26;
@@ -215,34 +186,8 @@ export function SelectionFlow({
         })}
       </svg>
 
-      {/* Real buttons under the picture rather than click targets inside the
-          SVG, so the stations are reachable by keyboard and announce
-          themselves. */}
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {stations.map((s, n) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => pick(n as Phase)}
-            aria-current={n === phase ? "step" : undefined}
-            className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              n === phase
-                ? "bg-[var(--ink)] text-[var(--surface)]"
-                : "text-[var(--ink-muted)] ring-1 ring-[var(--border)] ring-inset hover:bg-[var(--page)]"
-            }`}
-          >
-            <span className="tabular mr-1 opacity-60">{n + 1}</span>
-            {s}
-          </button>
-        ))}
-      </div>
-
-      <p
-        aria-live="polite"
-        className="mt-3 min-h-[40px] text-[13.5px] leading-6 text-[var(--ink-secondary)]"
-      >
-        {caption[phase]}
-      </p>
+      <PhaseButtons labels={stations} phase={phase} onPick={pick} />
+      <PhaseCaption text={caption[phase]} />
     </div>
   );
 }

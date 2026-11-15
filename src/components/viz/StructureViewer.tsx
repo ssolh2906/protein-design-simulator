@@ -26,7 +26,16 @@ import type { StructureModel } from "@/lib/data";
  * follows light and dark mode, and re-reads them when the theme changes.
  */
 
-export type Site = { resi: number; aa: string; label?: string };
+export type Site = {
+  resi: number;
+  aa: string;
+  label?: string;
+  /** CSS custom property for this marker, e.g. "--div-neg-3". */
+  color?: string;
+};
+
+/** A measured distance drawn between two marked residues. */
+export type Link = { a: number; b: number; label?: string };
 
 type Pt = [number, number, number];
 
@@ -108,6 +117,7 @@ export function StructureViewer({
   model,
   roleColors,
   sites = [],
+  links = [],
   height = 300,
   autoRotate = true,
   spin = 0.3,
@@ -121,6 +131,8 @@ export function StructureViewer({
   roleColors: Record<string, string>;
   /** Residues to mark with a sphere. Applied to the first chain only. */
   sites?: Site[];
+  /** Dashed connectors between marked residues, for showing a distance. */
+  links?: Link[];
   height?: number;
   autoRotate?: boolean;
   /** Radians per second. */
@@ -158,6 +170,7 @@ export function StructureViewer({
   // next frame without any React render at all.
   const sitesKey = JSON.stringify(sites);
   const rolesKey = JSON.stringify(roleColors);
+  const linksKey = JSON.stringify(links);
   const modelRef = useRef(model);
 
   // Kept in sync in an effect rather than during render: the draw loop reads
@@ -213,6 +226,7 @@ export function StructureViewer({
     const model = modelRef.current;
     const stableSites: Site[] = JSON.parse(sitesKey);
     const stableRoles: Record<string, string> = JSON.parse(rolesKey);
+    const stableLinks: Link[] = JSON.parse(linksKey);
 
     const traces = model.chains.map((c) => ({
       role: c.role,
@@ -227,6 +241,11 @@ export function StructureViewer({
       .map((s) => ({ ...s, idx: siteIndex.get(s.resi) }))
       .filter((s): s is Site & { idx: number } => s.idx !== undefined)
       .map((s) => ({ ...s, xyz: model.chains[0].ca[s.idx] as Pt }));
+
+    const byResi = new Map(markers.map((m) => [m.resi, m]));
+    const connectors = stableLinks
+      .map((l) => ({ ...l, p: byResi.get(l.a), q: byResi.get(l.b) }))
+      .filter((l) => l.p && l.q);
 
     /* --- per-frame state ------------------------------------------------ */
 
@@ -246,11 +265,20 @@ export function StructureViewer({
 
     const readColors = () => {
       const cs = getComputedStyle(document.documentElement);
-      const get = (v: string) => parseColor(cs.getPropertyValue(v) || "#888");
+      // Callers pass either a bare custom property ("--series-1") or the
+      // wrapped form that the chart helpers return ("var(--div-neg-3)").
+      const get = (v: string) => {
+        const name = v.startsWith("var(") ? v.slice(4, -1).trim() : v;
+        return parseColor(cs.getPropertyValue(name) || "#888");
+      };
       colors = {
-        role: Object.fromEntries(
-          Object.entries(stableRoles).map(([k, v]) => [k, get(v)]),
-        ),
+        role: Object.fromEntries([
+          ...Object.entries(stableRoles).map(([k, v]) => [k, get(v)]),
+          // Sites may each carry their own token, e.g. a fitness colour.
+          ...stableSites
+            .filter((x) => x.color)
+            .map((x) => [x.color as string, get(x.color as string)]),
+        ]),
         bg: get("--surface"),
         ink: get("--ink"),
         halo: get("--surface-raised"),
@@ -316,7 +344,7 @@ export function StructureViewer({
       // back-to-front is what makes the fold read as solid.
       type Seg = {
         z: number;
-        kind: "tube" | "site";
+        kind: "tube" | "site" | "link";
         a?: { x: number; y: number };
         b?: { x: number; y: number };
         width?: number;
@@ -324,6 +352,7 @@ export function StructureViewer({
         site?: (typeof markers)[number];
         x?: number;
         y?: number;
+        text?: string;
       };
       const segs: Seg[] = [];
 
@@ -347,6 +376,21 @@ export function StructureViewer({
         }
       }
 
+      // Connectors sit behind their markers but in front of the backbone
+      // they cross, which is what depth sorting already gives us.
+      for (const l of connectors) {
+        const a = project(l.p!.xyz);
+        const b = project(l.q!.xyz);
+        segs.push({
+          z: (a.z + b.z) / 2,
+          kind: "link",
+          a,
+          b,
+          color: col.ink,
+          text: l.label,
+        });
+      }
+
       for (const mk of markers) {
         const p = project(mk.xyz);
         segs.push({ z: p.z, kind: "site", x: p.x, y: p.y, color: col.ink, site: mk });
@@ -363,8 +407,42 @@ export function StructureViewer({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
+      const chips: {
+        x: number;
+        y: number;
+        dx: number;
+        dy: number;
+        z: number;
+        text: string;
+      }[] = [];
+
       for (const s of segs) {
         const f = fog(s.z);
+        if (s.kind === "link" && s.a && s.b) {
+          ctx.save();
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = mix(s.color, col.bg, 0.35 + f * 0.3);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(s.a.x, s.a.y);
+          ctx.lineTo(s.b.x, s.b.y);
+          ctx.stroke();
+          ctx.restore();
+          if (s.text) {
+            // Drawn in the top pass, below. Two residues close enough to
+            // interact are also close enough that their markers would cover
+            // a chip placed at the midpoint between them.
+            chips.push({
+              x: (s.a.x + s.b.x) / 2,
+              y: (s.a.y + s.b.y) / 2,
+              dx: s.b.x - s.a.x,
+              dy: s.b.y - s.a.y,
+              z: s.z,
+              text: s.text,
+            });
+          }
+          continue;
+        }
         if (s.kind === "tube" && s.a && s.b) {
           ctx.strokeStyle = mix(s.color, col.bg, f);
           ctx.lineWidth = (s.width ?? 3) * (1 - f * 0.45);
@@ -392,7 +470,11 @@ export function StructureViewer({
 
         ctx.beginPath();
         ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = mix(col.role.site ?? col.ink, col.bg, f * 0.8);
+        const dot =
+          (s.site.color ? col.role[s.site.color] : undefined) ??
+          col.role.site ??
+          col.ink;
+        ctx.fillStyle = mix(dot, col.bg, f * 0.8);
         ctx.fill();
 
         labelled.push({
@@ -402,6 +484,39 @@ export function StructureViewer({
           text: s.site.label ?? `${s.site.aa}${s.site.resi}`,
         });
       }
+
+      // Distance chips, offset off the line they measure so the markers at
+      // both ends cannot hide them.
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = '600 10px ui-sans-serif, system-ui, sans-serif';
+      for (const c of chips) {
+        const len = Math.hypot(c.dx, c.dy);
+        // Perpendicular to the connector, or straight up when the two ends
+        // are nearly on top of each other and there is no direction to take.
+        const [ux, uy] = len < 2 ? [0, -1] : [-c.dy / len, c.dx / len];
+        const x = c.x + ux * 20;
+        const y = c.y + uy * 20;
+        const f = fog(c.z);
+
+        ctx.strokeStyle = mix(col.ink, col.bg, 0.6);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(c.x, c.y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        const tw = ctx.measureText(c.text).width + 10;
+        ctx.fillStyle = mix(col.halo, col.bg, f * 0.4);
+        ctx.strokeStyle = mix(col.ink, col.bg, 0.8);
+        ctx.beginPath();
+        ctx.roundRect(x - tw / 2, y - 9, tw, 18, 9);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = mix(col.ink, col.bg, f * 0.4);
+        ctx.fillText(c.text, x, y);
+      }
+      ctx.textAlign = "left";
 
       // Labels last, so no geometry can cover them. Adjacent residues put
       // their markers within a few pixels of each other -- V39, D40 and G41
@@ -503,7 +618,7 @@ export function StructureViewer({
       cv.removeEventListener("pointerenter", onEnter);
       cv.removeEventListener("pointerleave", onLeave);
     };
-  }, [model.pdb, sitesKey, rolesKey, height, autoRotate, spin, reduced]);
+  }, [model.pdb, sitesKey, rolesKey, linksKey, height, autoRotate, spin, reduced]);
 
   return (
     <div ref={wrap} className="relative w-full">

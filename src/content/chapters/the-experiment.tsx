@@ -260,12 +260,11 @@ const COPY = {
     figFoldSub: "Four beta strands packed against one helix",
     figFoldCaption: (
       <>
-        The second view is the same kind of domain held by the Fc region of an
-        antibody. Binding is a physical contact, and that contact is the only
-        thing this experiment measures. One caveat, since this site does not
-        hide them: no B1–Fc complex of comparable quality exists, so the bound
-        view uses C2, a close homologue that docks the same way. Every{" "}
-        <em>number</em> on this site comes from B1.
+        Binding is a physical contact, and that contact is the only thing this
+        experiment measures. To see it, the second view borrows C2 — GB1&rsquo;s
+        sibling domain in the same protein, caught in the act of holding an
+        antibody. The two differ at 3 of 56 positions, none of them near the
+        four this walkthrough is about.
       </>
     ),
     structLabels: {
@@ -511,12 +510,10 @@ const COPY = {
     figFoldSub: "beta strand 네 개가 helix 하나에 붙어 있습니다",
     figFoldCaption: (
       <>
-        두 번째 화면은 같은 계열의 domain이 항체의 Fc region에 붙잡혀 있는
-        모습입니다. 결합은 물리적인 접촉이고, 이 실험이 재는 건 그 접촉
-        하나뿐입니다. 한 가지 단서는 숨기지 않고 말하자면, B1–Fc 복합체 중
-        이만한 품질의 구조가 없어서 결합 화면은 같은 방식으로 붙는 가까운
-        homologue인 C2를 씁니다. 이 사이트의 모든 <em>숫자</em>는 B1에서
-        나온 것입니다.
+        결합은 물리적인 접촉이고, 이 실험이 재는 건 그 접촉 하나뿐입니다. 그걸
+        보려고 두 번째 화면에서는 GB1의 형제 domain인 C2의 구조를 살펴봅니다.
+        같은 protein G 안에 있는 거의 같은 부품이고, 56자리 중 3자리만
+        다릅니다. 그 셋은 우리가 볼 네 자리 근처에 없습니다.
       </>
     ),
     structLabels: {
