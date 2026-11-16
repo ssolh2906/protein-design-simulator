@@ -305,7 +305,7 @@ const COPY = {
     figFlowSub: "Nothing here is measured one variant at a time",
     flowStations: ["Build", "Count", "Select", "Count again"] as [string, string, string, string],
     flowCaptions: [
-      "DNA is synthesised with all four positions randomised. Every variant sits in the same tube, and not in equal amounts — that unevenness matters in chapter 3.",
+      "Nobody builds 160,000 proteins one at a time. The DNA is synthesised once with all four positions left random, so every combination appears together in a single tube — in wildly unequal amounts, which matters in chapter 3.",
       "Sequencing counts each variant before anything is selected. This is the Input column: the starting line.",
       "The whole pool is held against IgG. Binders stay; the rest are washed away. No variant is ever tested on its own.",
       "Sequencing counts what is left. Binders now take a far bigger share than at the start, and that shift is the measurement. Three IgG concentrations were used, so there are three selected columns.",
@@ -416,10 +416,13 @@ const COPY = {
         grade: "best" as const,
         outcome: (
           <>
-            Correct. The randomisation also produced{" "}
-            <strong>stop codons</strong>, written as <code>_</code>. With a
-            stop possible at each of four positions the real space is 21⁴ =
-            194,481, comfortably more than 191,157. Chapter 2 opens these rows.
+            Correct. Leaving a position random means every outcome the genetic
+            code allows there, and one of them is a{" "}
+            <strong>stop codon</strong>, written as <code>_</code>. So each
+            position has 21 possibilities, not 20, and the real space is 21⁴ =
+            194,481 — comfortably more than 191,157. The stops were not a
+            mistake; they came free with the library. Chapter 2 opens these
+            rows.
           </>
         ),
       },
@@ -556,7 +559,7 @@ const COPY = {
     figFlowSub: "여기서는 어떤 것도 variant 하나씩 재지 않습니다",
     flowStations: ["만들기", "세기", "선별", "다시 세기"] as [string, string, string, string],
     flowCaptions: [
-      "네 자리를 전부 무작위화한 DNA를 합성합니다. 모든 variant가 같은 tube 안에 있고, 양은 제각각입니다. 이 불균등함이 3장에서 중요해집니다.",
+      "16만 개를 하나씩 만드는 게 아닙니다. 네 자리를 비워둔 채 DNA를 한 번 합성하면 모든 조합이 한 tube 안에 동시에 생깁니다. 양은 제각각이고, 이 불균등함이 3장에서 중요해집니다.",
       "아직 아무것도 선별하기 전에 각 variant를 셉니다. 이게 Input 열, 출발선입니다.",
       "pool 전체를 IgG에 걸어둡니다. 붙는 것은 남고 나머지는 씻겨 나갑니다. 어떤 variant도 따로 시험하지 않습니다.",
       "남은 것을 다시 셉니다. 붙는 variant의 몫이 출발선보다 훨씬 커졌습니다. 이 변화가 곧 측정값입니다. IgG 농도 세 가지를 썼기 때문에 selected 열이 세 개 나옵니다.",
@@ -664,9 +667,11 @@ const COPY = {
         grade: "best" as const,
         outcome: (
           <>
-            맞습니다. 무작위화 과정에서 <strong>stop codon</strong>도 같이
-            생겼고, <code>_</code>로 표기됩니다. 네 자리 각각에 stop이 가능하니
-            실제 공간은 21⁴ = 194,481이고, 191,157보다 넉넉히 큽니다. 2장에서 이
+            맞습니다. 한 자리를 비워두면 그 자리에 올 수 있는 게 전부
+            나오는데, 그중 하나가 <strong>stop codon</strong>입니다.{" "}
+            <code>_</code>로 표기됩니다. 그래서 자리당 20가지가 아니라
+            21가지이고, 실제 공간은 21⁴ = 194,481로 191,157보다 넉넉히 큽니다.
+            stop codon은 실수가 아니라 library에 딸려 온 것입니다. 2장에서 이
             행들을 직접 엽니다.
           </>
         ),
