@@ -2,11 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    # TEMPORARY: the working branch deploys too, so the site can be looked at
-    # without merging first. GitHub Pages serves one site per repository, so
-    # whichever branch pushes last is what is live. Drop the claude/ branch
-    # from this list to go back to main-only.
-    branches: [main, claude/blissful-mayer-kf1sba]
+    branches: [main]
   # Lets you redeploy from the Actions tab without pushing a commit.
   workflow_dispatch:
 
